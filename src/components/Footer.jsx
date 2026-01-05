@@ -42,8 +42,8 @@ const Footer = () => {
             <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Platform</h3>
             <ul className="space-y-3 text-sm">
               <li><Link to="/" className="hover:text-brand-gold transition-colors">Home</Link></li>
-              <li><Link to="/seasons" className="hover:text-brand-gold transition-colors">TV Series</Link></li>
-              <li><Link to="/seasons" className="hover:text-brand-gold transition-colors">Categories</Link></li>
+              <li><Link to="/seasons" className="hover:text-brand-gold transition-colors">Action</Link></li>
+              <li><Link to="/seasons" className="hover:text-brand-gold transition-colors">seasons</Link></li>
               <li><Link to="/" className="hover:text-brand-gold transition-colors">Film zose</Link></li>
             </ul>
           </div>
