@@ -45,7 +45,7 @@ const Navbar = ({ onSearch }) => {
           <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
             <a href="/" className="hover:text-brand-gold transition">Ahabanza</a>
             <a href="/seasons" className="hover:text-brand-gold transition">Action</a>
-            <a href="/seasons" className="hover:text-brand-gold transition">Categories</a>
+            <a href="/seasons" className="hover:text-brand-gold transition">Seasons</a>
             <a href="/" className="hover:text-brand-gold transition">Film zose</a>
           </div>
 
