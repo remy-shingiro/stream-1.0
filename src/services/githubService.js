@@ -12,17 +12,20 @@ const fromBase64 = (str) => decodeURIComponent(escape(atob(str)));
 // 1. FETCH ALL DATA
 export const fetchAllData = async () => {
   try {
+    // FIX 1: Add cache busting (?t=...) to force fresh data
+    const timestamp = Date.now();
     const [moviesReq, seriesReq] = await Promise.all([
-      fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/movies.json`),
-      fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/series.json`)
+      fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/movies.json?t=${timestamp}`),
+      fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/series.json?t=${timestamp}`)
     ]);
 
     const movies = moviesReq.ok ? await moviesReq.json() : [];
     const series = seriesReq.ok ? await seriesReq.json() : [];
 
-    // Tag them properly
-    const moviesWithType = movies.map(m => ({ ...m, type: 'movie' }));
-    const seriesWithType = series.map(s => ({ ...s, type: 'series' }));
+    // FIX 2: STOP OVERWRITING TYPES!
+    // Only set default if type is missing. Do not force 'movie' if it is 'collection'.
+    const moviesWithType = movies.map(m => ({ ...m, type: m.type || 'movie' }));
+    const seriesWithType = series.map(s => ({ ...s, type: s.type || 'series' }));
 
     return [...moviesWithType, ...seriesWithType];
   } catch (error) {
@@ -63,15 +66,17 @@ const writeToGitHub = async (filename, content, message) => {
   if (!putResponse.ok) throw new Error("GitHub update failed");
   return true;
 };
+
 // 3. ADD OR UPDATE ITEM
 export const saveOrUpdateContent = async (item, isEdit = false) => {
   try {
-    // Determine file based on type OR category if type is missing
+    // Determine file based on type
     const isSeries = item.type === 'series' || item.category === 'Series';
+    // Note: Collections are stored in movies.json by default in your logic, which is fine.
     const filename = isSeries ? "series.json" : "movies.json";
     
-    // Fetch current list first to ensure we have latest data
-    const req = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${filename}`);
+    // FIX 3: Fetch fresh list before writing to avoid conflicts
+    const req = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${filename}?t=${Date.now()}`);
     let currentList = await req.json();
 
     if (isEdit) {
@@ -99,14 +104,13 @@ export const deleteContent = async (item) => {
     const isSeries = item.type === 'series' || item.category === 'Series';
     const filename = isSeries ? "series.json" : "movies.json";
 
-    // 1. Fetch latest data
-    const req = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${filename}`);
+    // FIX 4: Fetch fresh list before deleting
+    const req = await fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/${BRANCH}/${filename}?t=${Date.now()}`);
     const currentList = await req.json();
 
-    // 2. Filter out the item to delete
+    // Filter out the item to delete
     const updatedList = currentList.filter(i => i.id !== item.id);
 
-    // 3. Save new list back to GitHub
     await writeToGitHub(filename, updatedList, `Delete ${item.title}`);
     return true;
   } catch (error) {
