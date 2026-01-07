@@ -73,7 +73,7 @@ const AdminPanel = ({ movies }) => {
     }
   };
 
-  // --- SERIES MANAGEMENT LOGIC ---
+  // --- SERIES & COLLECTION MANAGEMENT LOGIC ---
   const addSeason = () => {
     setFormData(prev => ({
       ...prev,
@@ -93,7 +93,7 @@ const AdminPanel = ({ movies }) => {
 
   const addEpisodeToSeason = (seasonIndex) => {
     const input = newEpisodeInput[seasonIndex];
-    if (!input?.title || !input?.link) return toast.error("Episode needs title & link");
+    if (!input?.title || !input?.link) return toast.error("Content needs title & link");
 
     setFormData(prev => {
       const updatedSeasons = [...prev.seasons];
@@ -101,7 +101,7 @@ const AdminPanel = ({ movies }) => {
         episodeNumber: updatedSeasons[seasonIndex].episodes.length + 1,
         title: input.title,
         link: input.link,
-        downloadLink: input.downloadLink || '' // <--- ADDED HERE
+        downloadLink: input.downloadLink || ''
       });
       return { ...prev, seasons: updatedSeasons };
     });
@@ -123,8 +123,9 @@ const AdminPanel = ({ movies }) => {
     e.preventDefault();
     if (!formData.title) return toast.error("Title is required!");
 
-    if (formData.type === 'series' && formData.seasons.length === 0) {
-      return toast.error("A Series must have at least one season!");
+    // Validation for Series OR Collection
+    if ((formData.type === 'series' || formData.type === 'collection') && formData.seasons.length === 0) {
+      return toast.error(formData.type === 'collection' ? "Collection must have at least one part!" : "Series must have at least one season!");
     }
 
     setIsSaving(true);
@@ -135,7 +136,8 @@ const AdminPanel = ({ movies }) => {
       id: editingId || Date.now().toString(),
       video_url: formData.type === 'movie' ? formData.video_url : null,
       download_url: formData.type === 'movie' ? formData.download_url : null,
-      seasons: formData.type === 'series' ? formData.seasons : []
+      // Both Series and Collections use the seasons array
+      seasons: (formData.type === 'series' || formData.type === 'collection') ? formData.seasons : []
     };
 
     const success = await saveOrUpdateContent(itemToSave, !!editingId);
@@ -196,20 +198,26 @@ const AdminPanel = ({ movies }) => {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Type Toggle */}
+                {/* 1. UPDATED TYPE TOGGLE (Movie / Series / Collection) */}
                 <div className="flex bg-black p-1 rounded-lg border border-gray-700">
-                  {['movie', 'series'].map(type => (
+                  {['movie', 'series', 'collection'].map(type => (
                     <button
                       key={type} type="button"
-                      onClick={() => setFormData({...formData, type})}
-                      className={`flex-1 py-2 text-sm font-bold rounded-md capitalize transition-all ${formData.type === type ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                      onClick={() => {
+                         // If switching to collection, ensure we have a container for the movies
+                         const newSeasons = type === 'collection' && formData.seasons.length === 0 
+                            ? [{ seasonNumber: 1, episodes: [] }] 
+                            : formData.seasons;
+                         setFormData({...formData, type, seasons: newSeasons})
+                      }}
+                      className={`flex-1 py-2 text-xs md:text-sm font-bold rounded-md capitalize transition-all ${formData.type === type ? 'bg-red-600 text-white' : 'text-gray-400 hover:text-white'}`}
                     >
                       {type}
                     </button>
                   ))}
                 </div>
 
-                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Title (e.g. Iron Man)" className="w-full bg-black border border-gray-700 rounded p-3 text-sm focus:border-red-600 outline-none" />
+                <input required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} placeholder="Title (e.g. John Wick Collection)" className="w-full bg-black border border-gray-700 rounded p-3 text-sm focus:border-red-600 outline-none" />
                 
                 {/* IMAGE UPLOAD */}
                 <div className="space-y-2 border border-gray-800 p-3 rounded-lg bg-black/30">
@@ -229,60 +237,73 @@ const AdminPanel = ({ movies }) => {
                     <input value={formData.download_url || ''} onChange={e => setFormData({...formData, download_url: e.target.value})} placeholder="Movie Download URL" className="w-full bg-black border border-gray-700 rounded p-3 text-sm focus:border-red-600 outline-none" />
                   </>
                 ) : (
-                  // --- SERIES BUILDER UI ---
+                  // --- SERIES & COLLECTION BUILDER UI ---
                   <div className="space-y-4 border-t border-gray-700 pt-4">
-                     <div className="flex justify-between items-center">
-                        <label className="text-sm font-bold text-gray-300">Seasons & Episodes</label>
-                        <button type="button" onClick={addSeason} className="text-xs bg-red-600 px-2 py-1 rounded text-white hover:bg-red-700">+ Add Season</button>
-                     </div>
-                     
-                     {formData.seasons.map((season, sIndex) => (
-                       <div key={sIndex} className="bg-black/50 p-3 rounded border border-gray-700">
-                          <div className="flex justify-between items-center mb-2">
-                             <h4 className="text-xs font-bold text-white">Season {season.seasonNumber}</h4>
-                             <button type="button" onClick={() => removeSeason(sIndex)} className="text-[10px] text-red-500 hover:text-red-400">Remove Season</button>
-                          </div>
-
-                          {/* Existing Episodes List */}
-                          <ul className="space-y-1 mb-3">
-                             {season.episodes.map((ep, epIndex) => (
-                               <li key={epIndex} className="flex flex-col gap-1 text-xs text-gray-400 bg-gray-900 p-2 rounded relative">
-                                  <div className="flex justify-between">
-                                     <span className="font-bold text-white">Ep {ep.episodeNumber}: {ep.title}</span>
-                                     <button type="button" onClick={() => removeEpisode(sIndex, epIndex)} className="text-red-500 font-bold px-1">×</button>
-                                  </div>
-                                  <div className="truncate text-[10px] opacity-60">Stream: {ep.link}</div>
-                                  {ep.downloadLink && <div className="truncate text-[10px] opacity-60">DL: {ep.downloadLink}</div>}
-                               </li>
-                             ))}
-                          </ul>
-
-                          {/* Add Episode Inputs */}
-                          <div className="flex flex-col gap-2">
-                             <input 
-                               placeholder="Episode Title" 
-                               className="w-full bg-gray-900 text-xs p-2 rounded border border-gray-700"
-                               value={newEpisodeInput[sIndex]?.title || ''}
-                               onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], title: e.target.value}})}
-                             />
-                             <div className="flex gap-2">
-                                <input 
-                                  placeholder="Stream URL" 
-                                  className="w-1/2 bg-gray-900 text-xs p-2 rounded border border-gray-700"
-                                  value={newEpisodeInput[sIndex]?.link || ''}
-                                  onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], link: e.target.value}})}
-                                />
-                                <input 
-                                  placeholder="Download URL" 
-                                  className="w-1/2 bg-gray-900 text-xs p-2 rounded border border-gray-700"
-                                  value={newEpisodeInput[sIndex]?.downloadLink || ''} // <--- UPDATED INPUT
-                                  onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], downloadLink: e.target.value}})}
-                                />
+                      <div className="flex justify-between items-center">
+                         <label className="text-sm font-bold text-gray-300">
+                           {formData.type === 'collection' ? 'Movies in this Collection' : 'Seasons & Episodes'}
+                         </label>
+                         
+                         {/* Hide Add Season button for Collections */}
+                         {formData.type !== 'collection' && (
+                           <button type="button" onClick={addSeason} className="text-xs bg-red-600 px-2 py-1 rounded text-white hover:bg-red-700">+ Add Season</button>
+                         )}
+                      </div>
+                      
+                      {formData.seasons.map((season, sIndex) => (
+                        <div key={sIndex} className="bg-black/50 p-3 rounded border border-gray-700">
+                           {/* Hide Season Header for Collections */}
+                           {formData.type !== 'collection' && (
+                             <div className="flex justify-between items-center mb-2">
+                                <h4 className="text-xs font-bold text-white">Season {season.seasonNumber}</h4>
+                                <button type="button" onClick={() => removeSeason(sIndex)} className="text-[10px] text-red-500 hover:text-red-400">Remove Season</button>
                              </div>
-                             <button type="button" onClick={() => addEpisodeToSeason(sIndex)} className="w-full bg-gray-700 text-xs py-2 rounded text-white hover:bg-gray-600 font-bold">Add Episode</button>
-                          </div>
-                       </div>
-                     ))}
+                           )}
+
+                           {/* Existing List */}
+                           <ul className="space-y-1 mb-3">
+                              {season.episodes.map((ep, epIndex) => (
+                                <li key={epIndex} className="flex flex-col gap-1 text-xs text-gray-400 bg-gray-900 p-2 rounded relative">
+                                   <div className="flex justify-between">
+                                      <span className="font-bold text-white">
+                                        {formData.type === 'collection' ? `Part ${epIndex + 1}:` : `Ep ${ep.episodeNumber}:`} {ep.title}
+                                      </span>
+                                      <button type="button" onClick={() => removeEpisode(sIndex, epIndex)} className="text-red-500 font-bold px-1">×</button>
+                                   </div>
+                                   <div className="truncate text-[10px] opacity-60">Stream: {ep.link}</div>
+                                   {ep.downloadLink && <div className="truncate text-[10px] opacity-60">DL: {ep.downloadLink}</div>}
+                                </li>
+                              ))}
+                           </ul>
+
+                           {/* Add New Item Inputs */}
+                           <div className="flex flex-col gap-2">
+                              <input 
+                                placeholder={formData.type === 'collection' ? "Movie Title (e.g. John Wick 2)" : "Episode Title"}
+                                className="w-full bg-gray-900 text-xs p-2 rounded border border-gray-700"
+                                value={newEpisodeInput[sIndex]?.title || ''}
+                                onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], title: e.target.value}})}
+                              />
+                              <div className="flex gap-2">
+                                 <input 
+                                   placeholder="Stream URL" 
+                                   className="w-1/2 bg-gray-900 text-xs p-2 rounded border border-gray-700"
+                                   value={newEpisodeInput[sIndex]?.link || ''}
+                                   onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], link: e.target.value}})}
+                                 />
+                                 <input 
+                                   placeholder="Download URL" 
+                                   className="w-1/2 bg-gray-900 text-xs p-2 rounded border border-gray-700"
+                                   value={newEpisodeInput[sIndex]?.downloadLink || ''}
+                                   onChange={(e) => setNewEpisodeInput({...newEpisodeInput, [sIndex]: {...newEpisodeInput[sIndex], downloadLink: e.target.value}})}
+                                 />
+                              </div>
+                              <button type="button" onClick={() => addEpisodeToSeason(sIndex)} className="w-full bg-gray-700 text-xs py-2 rounded text-white hover:bg-gray-600 font-bold">
+                                {formData.type === 'collection' ? "Add Movie to Collection" : "Add Episode"}
+                              </button>
+                           </div>
+                        </div>
+                      ))}
                   </div>
                 )}
 
@@ -301,7 +322,7 @@ const AdminPanel = ({ movies }) => {
           {/* --- RIGHT: LIST --- */}
           <div className="lg:col-span-7">
             <div className="flex gap-2 mb-4">
-               {['all', 'movie', 'series'].map(tab => (
+               {['all', 'movie', 'series', 'collection'].map(tab => (
                  <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-full text-xs font-bold capitalize ${activeTab === tab ? 'bg-white text-black' : 'bg-[#1a1a1a] text-gray-400'}`}>{tab}</button>
                ))}
             </div>
