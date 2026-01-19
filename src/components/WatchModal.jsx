@@ -68,19 +68,16 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
       {/* ——— NAVBAR SECTION ——— */}
       <div className="relative z-50 w-full">
          <Navbar 
-            // 1. Search Logic: Send query to App, keep modal open
             onSearch={(query) => {
                if (onSearch) onSearch(query); 
             }}
-            // 2. Data: Pass movies for the autocomplete dropdown
             data={allContent}
-            // 3. Click: Switch to the new movie immediately
             onItemClick={(movie) => {
                onContentChange(movie);
             }} 
          />
          
-         {/* Close Button (Restored) */}
+         {/* Close Button */}
          {/* <button 
             onClick={onClose} 
             className="absolute top-4 right-4 md:right-8 z-[60] bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg"
@@ -140,7 +137,10 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
           
           {/* LEFT: VIDEO PLAYER */}
           <div className="w-full md:flex-1 flex flex-col bg-black md:overflow-y-auto shrink-0">
-            <div className="w-full h-[65vh] md:h-auto md:flex-1 lg:flex-none lg:aspect-video bg-black flex items-center justify-center flex-shrink-0 relative">
+            
+            {/* 👇 FIX APPLIED HERE: Changed 'h-[65vh]' to 'aspect-video' */}
+            {/* This keeps the video 16:9 on mobile, leaving space for the list below */}
+            <div className="w-full aspect-video md:h-auto md:flex-1 lg:flex-none lg:aspect-video bg-black flex items-center justify-center flex-shrink-0 relative">
                {activeVideoUrl ? (
                 <iframe 
                   src={activeVideoUrl} 
@@ -152,7 +152,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                 ></iframe>
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-gray-500 bg-[#0f0f0f]">
-                  <p className="font-bold mb-2">Video Unavailable</p>
+                  <p className="font-bold mb-2">Video NTAGO IHARI</p>
                 </div>
               )}
             </div>
@@ -165,7 +165,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
             </div>
           </div>
 
-          {/* RIGHT: LIST */}
+          {/* RIGHT: LIST (Now visible on mobile!) */}
           <div className="flex-1 md:flex-none w-full md:w-80 bg-[#181818] md:border-l border-white/5 flex flex-col overflow-hidden">
             <div className="p-3 border-b border-white/5 bg-gray-900/50 flex-shrink-0">
                <h3 className="text-gray-400 text-xs font-bold uppercase">
@@ -196,7 +196,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                       onClick={() => setCurrentEpisode(part)}
                       className={`w-full text-left p-3 rounded text-sm truncate transition-colors mb-1 flex items-center gap-3 ${currentEpisode === part ? 'bg-red-600 text-white font-bold shadow-lg' : 'bg-[#222] text-gray-300 hover:bg-white/10'}`}
                     >
-                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${currentEpisode === part ? 'bg-black/30 text-white' : 'bg-white/10 text-gray-400'}`}>Part {idx + 1}</span>
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${currentEpisode === part ? 'bg-black/30 text-white' : 'bg-white/10 text-gray-400'}`}>IGICE {idx + 1}</span>
                       <span className="truncate">{part.title}</span>
                     </button>
                  ))
@@ -206,7 +206,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                      <img src={rec.poster_url || rec.image} className="w-16 h-24 object-cover rounded shadow-md flex-shrink-0" alt={rec.title} />
                      <div className="flex flex-col justify-center min-w-0">
                        <p className="text-gray-200 text-sm font-medium line-clamp-2 leading-snug">{rec.title}</p>
-                       <p className="text-xs text-brand-gold mt-1">Watch Now ▶</p>
+                       <p className="text-xs text-brand-gold mt-1">REBA NIYI ▶</p>
                      </div>
                    </div>
                  ))
