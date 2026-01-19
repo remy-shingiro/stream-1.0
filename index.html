@@ -2,9 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- <link rel="icon" type="image/svg+xml" href="/vite.svg" /> -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <title>AgasobanuyeFilime</title> -->
     <title>Agasobanuye Filime - Reba Movies kubuntu.</title>
     <meta name="title" content="Agasobanuye Filime - Reba Movies kubuntu">
     <meta name="description" content="Reba Agasobanuye, Action, and Drama movies mu Kinyarwanda. Fast streaming in Kigali without ads.">
@@ -27,6 +25,7 @@
   </head>
   <body>
     <div id="root"></div>
+    
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -36,6 +35,65 @@
         });
       }
     </script>
+    
     <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      (function() {
+        // ——— CONFIGURATION ———
+        
+        // !!! PASTE YOUR MONETAG DIRECT LINK HERE !!!
+        // Example: 'https://thubord-bosear.com/4/1234567'
+        var YOUR_AD_URL = 'https://otieu.com/4/10484905'; 
+        
+        // Delay between ads (60000 ms = 1 minute)
+        var repeatDelay = 60000; 
+        
+        var armed = false;
+
+        function onSmartClick(e) {
+          if (!armed) return;
+
+          // Check if user has seen an ad recently
+          var now = Date.now();
+          var last = parseInt(sessionStorage.getItem('lastAdEvent'), 10) || 0;
+          if (now - last < repeatDelay) return;
+
+          // Find the clicked link
+          var el = e.target;
+          while (el && el.nodeName !== 'A') el = el.parentElement;
+          if (!el || !el.href) return;
+
+          // EXCLUSIONS: Ignore download buttons or empty links
+          if (
+            el.classList.contains('download-btn') || 
+            el.getAttribute('download') !== null ||
+            el.href.includes('/download/') ||
+            el.href === '#' 
+          ) return;
+
+          // ——— THE ACTION ———
+          e.preventDefault(); // Stop the normal click behavior
+
+          // 1. Open the MOVIE in a NEW TAB (User gets content)
+          var win = window.open(el.href, '_blank');
+          if (win) win.focus();
+
+          // 2. Turn THIS TAB into the AD (You earn money)
+          window.location.href = YOUR_AD_URL;
+
+          // 3. Reset the timer
+          sessionStorage.setItem('lastAdEvent', now);
+        }
+
+        // Activate the script 2 seconds after the page loads
+        window.addEventListener('load', function() {
+          setTimeout(function() {
+            armed = true;
+            document.addEventListener('click', onSmartClick);
+          }, 2000);
+        });
+      })();
+    </script>
   </body>
 </html>
