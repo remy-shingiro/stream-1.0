@@ -128,7 +128,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
 
             <button 
               onClick={onClose} 
-              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-colors backdrop-blur-md ml-1 flex-shrink-0"
+              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-600 text-white transition-colors backdrop-blur-md ml-1 flex-shrink-0"
             >
               <X size={20} />
             </button>
