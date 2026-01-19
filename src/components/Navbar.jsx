@@ -1,18 +1,54 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Search, X, Menu } from 'lucide-react'; 
 
-const Navbar = ({ onSearch }) => {
+const Navbar = ({ onSearch, data = [], onItemClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const searchRef = useRef(null);
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      console.log("Searching for:", searchQuery);
+  // 1. PERFORMANCE: Debounce the "Heavy" Search
+  // Waits 500ms after you stop typing before updating the main page.
+  useEffect(() => {
+    const timer = setTimeout(() => {
       if (onSearch) onSearch(searchQuery);
-      setIsMobileMenuOpen(false);
-      setIsSearchOpen(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, onSearch]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setSuggestions([]);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value;
+    setSearchQuery(query); // Update text immediately
+    
+    // 2. Suggestions are INSTANT (No delay here)
+    if (query.trim().length > 1 && data.length > 0) {
+      const matches = data
+        .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 5); // Show top 5 results
+      setSuggestions(matches);
+    } else {
+      setSuggestions([]);
     }
+  };
+
+  const handleSuggestionClick = (movie) => {
+    setSearchQuery('');       // Clear input
+    setSuggestions([]);       // Close dropdown
+    setIsSearchOpen(false);   // Close mobile search
+    if (onItemClick) onItemClick(movie); // Open movie immediately
   };
 
   const toggleMenu = () => {
@@ -26,14 +62,14 @@ const Navbar = ({ onSearch }) => {
   };
 
   return (
-    <nav className="bg-brand-dark/95 border-b border-white/10 sticky top-0 z-50 backdrop-blur-md">
+    <nav className="bg-brand-dark/95 border-b border-white/10 sticky top-0 z-50 backdrop-blur-md" ref={searchRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           
-          {/* Logo links to Home */}
+          {/* --- LOGO (Your Original Style) --- */}
           <a href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
             <div className="w-10 h-10 rounded-full border-2 border-red-600 flex items-center justify-center group-hover:border-red-500 transition">
-              <span className="text-red-600 font-bold text-xl group-hover:text-red-500">▶</span>
+              <span className="text-red-600 font-bold text-xl group-hover:text-red-500 pt-0.5 pl-0.5">▶</span>
             </div>
             <div className="flex flex-col">
               <span className="text-brand-gold font-bold text-xl leading-none">Agasobanuye</span>
@@ -41,7 +77,7 @@ const Navbar = ({ onSearch }) => {
             </div>
           </a>
 
-          {/* Desktop Navigation */}
+          {/* --- DESKTOP NAVIGATION --- */}
           <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
             <a href="/" className="hover:text-brand-gold transition">Ahabanza</a>
             <a href="/seasons" className="hover:text-brand-gold transition">Action</a>
@@ -49,68 +85,100 @@ const Navbar = ({ onSearch }) => {
             <a href="/" className="hover:text-brand-gold transition">Film zose</a>
           </div>
 
-          {/* Right Side: Search & Menu Toggle */}
-          <div className="flex items-center gap-4">
+          {/* --- RIGHT SIDE: SEARCH & MENU --- */}
+          <div className="flex items-center gap-4 relative">
             
-            {/* Desktop Search */}
-            <form onSubmit={handleSearchSubmit} className="relative hidden md:block">
+            {/* DESKTOP SEARCH INPUT (With Your Width Logic) */}
+            <div className="relative hidden md:block">
               <input 
                 type="text" 
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 placeholder="Shakisha filme..." 
-                // 👇 FIXED LINE BELOW 👇
-                // 1. w-40: Default width
-                // 2. md:w-48: Slightly wider on tablet, but STATIC (no focus growth)
-                // 3. lg:w-48: Base width on Desktop
-                // 4. lg:focus:w-64: ONLY expands on Large Screens (Desktop)
+                // Uses your specific width classes: w-40 -> md:w-48 -> lg:focus:w-64
                 className="bg-white text-black pl-3 pr-10 py-2 rounded-sm text-sm focus:outline-none w-40 md:w-48 lg:w-48 lg:focus:w-64 transition-all"
               />
-              <button type="submit" className="absolute right-0 top-0 h-full px-3 bg-brand-gold text-black rounded-r-sm hover:bg-yellow-500">
-                🔍
+              <button className="absolute right-0 top-0 h-full px-3 bg-brand-gold text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center pointer-events-none">
+                 <Search size={16} />
               </button>
-            </form>
 
-            {/* Mobile Search Icon */}
-            <button onClick={toggleSearch} className="md:hidden text-gray-300 hover:text-brand-gold focus:outline-none">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              {/* DESKTOP SUGGESTIONS DROPDOWN */}
+              {suggestions.length > 0 && (
+                <div className="absolute top-full mt-2 right-0 w-72 bg-brand-dark border border-white/10 rounded-md shadow-2xl overflow-hidden z-50">
+                  {suggestions.map((movie) => (
+                    <div 
+                      key={movie.id} 
+                      onClick={() => handleSuggestionClick(movie)}
+                      className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-white/5 last:border-0"
+                    >
+                      <img src={movie.poster_url || movie.image} alt={movie.title} className="w-10 h-14 object-cover rounded shadow" />
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-white text-sm font-medium truncate">{movie.title}</span>
+                        <span className="text-gray-500 text-xs">{movie.type === 'series' ? 'Series' : 'Movie'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* MOBILE ICONS */}
+            <button onClick={toggleSearch} className="md:hidden text-gray-300 hover:text-brand-gold">
+              <Search size={24} />
             </button>
-
-            {/* Mobile Menu Icon */}
-            <button onClick={toggleMenu} className="md:hidden text-gray-300 hover:text-white focus:outline-none">
-              {isMobileMenuOpen ? <span className="text-2xl">✖</span> : <span className="text-2xl">☰</span>}
+            <button onClick={toggleMenu} className="md:hidden text-gray-300 hover:text-white">
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Search Bar Dropdown */}
+      {/* --- MOBILE SEARCH BAR (With Suggestions) --- */}
       {isSearchOpen && (
-        <div className="md:hidden bg-brand-dark p-4 border-b border-white/10 animate-fade-in-down">
-          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+        <div className="md:hidden bg-brand-dark p-4 border-b border-white/10 relative">
+          <div className="relative flex gap-2">
              <input 
               type="text" 
               autoFocus 
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Shakisha..." 
               className="flex-1 bg-white text-black px-3 py-2 rounded-sm text-sm focus:outline-none"
             />
-            <button type="submit" className="bg-brand-gold text-black px-4 py-2 rounded-sm font-bold">🔍</button>
-          </form>
+            <button className="bg-brand-gold text-black px-4 py-2 rounded-sm font-bold flex items-center">
+               <Search size={18} />
+            </button>
+          </div>
+
+          {/* MOBILE SUGGESTIONS LIST */}
+          {suggestions.length > 0 && (
+            <div className="mt-2 bg-[#181818] rounded-md border border-white/10 shadow-xl z-50 relative">
+               {suggestions.map((movie) => (
+                  <div 
+                    key={movie.id} 
+                    onClick={() => handleSuggestionClick(movie)}
+                    className="flex items-center gap-4 p-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0"
+                  >
+                    <img src={movie.poster_url || movie.image} alt={movie.title} className="w-12 h-16 object-cover rounded" />
+                    <div className="flex flex-col">
+                      <span className="text-white font-medium text-sm line-clamp-1">{movie.title}</span>
+                      <span className="text-brand-gold text-xs">Reba nonaha</span>
+                    </div>
+                  </div>
+               ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Mobile Menu Dropdown */}
+      {/* --- MOBILE MENU --- */}
       {isMobileMenuOpen && (
         <div className="md:hidden bg-brand-dark border-t border-white/10">
-          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <a href="/" className="block px-3 py-2 rounded-md text-base font-medium text-white hover:text-brand-gold hover:bg-white/5">Ahabanza</a>
-            <a href="/seasons" className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Action</a>
-            <a href="/seasons" className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Seasons</a>
-            <a href="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Film zose</a>
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            <a href="/" className="block px-3 py-3 rounded-md text-base font-medium text-white hover:text-brand-gold hover:bg-white/5">Ahabanza</a>
+            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Action</a>
+            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Seasons</a>
+            <a href="/" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Film zose</a>
           </div>
         </div>
       )}

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react'; 
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
@@ -29,14 +28,11 @@ const AnalyticsTracker = () => {
 
 function App() {
   // ---------------------------------------------------------------------------
-  // 3. OPTIMIZED STATE: "Stale-While-Revalidate" Pattern
+  // 3. OPTIMIZED STATE
   // ---------------------------------------------------------------------------
-  
-  // A. Try to load data from the phone's LocalStorage immediately
   const [fetchedData, setFetchedData] = useState(() => {
     try {
       const saved = localStorage.getItem('site_content_cache');
-      // If we have saved data, use it INSTANTLY.
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.warn("Cache parse error", e);
@@ -44,37 +40,29 @@ function App() {
     }
   });
 
-  // B. If we found data in storage, we are NOT loading. We show the site immediately.
   const [isLoading, setIsLoading] = useState(() => {
     const saved = localStorage.getItem('site_content_cache');
-    return !saved; // Returns false (Not Loading) if cache exists
+    return !saved; 
   });
 
   const [selectedContent, setSelectedContent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- Google Analytics ---
   useEffect(() => {
     ReactGA.initialize("G-6N373FLFPF"); 
   }, []);
 
   // ---------------------------------------------------------------------------
-  // 4. OPTIMIZED DATA FETCH
+  // 4. DATA FETCH
   // ---------------------------------------------------------------------------
   useEffect(() => {
     const loadContent = async () => {
       try {
-        // 1. Fetch fresh data from GitHub in the background
         const data = await fetchAllData();
-        
-        // 2. Save it to the phone for the NEXT visit
         localStorage.setItem('site_content_cache', JSON.stringify(data));
-        
-        // 3. Update the screen (User sees new movies pop in)
         setFetchedData(data);
       } catch (error) {
         console.error("Failed to update content", error);
-        // Note: Even if this fails (offline), the user still sees the cached data!
       } finally {
         setIsLoading(false);
       }
@@ -82,7 +70,6 @@ function App() {
     loadContent();
   }, []);
 
-  // --- Duplicate Handler (Kept Exact) ---
   const allContent = useMemo(() => {
     if (fetchedData.length === 0) return [];
     const seenIds = new Set();
@@ -100,14 +87,12 @@ function App() {
     });
   }, [fetchedData]);
 
-  // --- Series Filter (Kept Exact) ---
   const seriesContent = useMemo(() => {
     return allContent.filter(item => 
       item.type === 'series' || item.category === 'Series'
     );
   }, [allContent]);
 
-  // Initial Loading Screen (Only shows for 1st time visitors)
   if (isLoading) {
     return <SkeletonLoader />;
   }
@@ -118,7 +103,13 @@ function App() {
       
       <div className="min-h-screen bg-[#0f0f0f] font-sans relative">
         <Toaster position="bottom-right" reverseOrder={false} />
-        <Navbar onSearch={setSearchTerm} />
+        
+        {/* ——— UPDATED NAVBAR (With Suggestions) ——— */}
+        <Navbar 
+            onSearch={setSearchTerm} 
+            data={allContent}                // 👈 Pass Data for suggestions
+            onItemClick={setSelectedContent} // 👈 Handle clicks
+        />
 
         {/* --- PAGE CONTENT --- */}
         <div className={selectedContent ? "hidden" : "block"}>
@@ -142,7 +133,9 @@ function App() {
                 path="/seasons" 
                 element={
                   <Home 
-                    contentData={seriesContent} 
+                    // ——— FIXED SEARCH LOGIC ———
+                    // If searching, check ALL content. If not, show only Series.
+                    contentData={searchTerm ? allContent : seriesContent} 
                     searchTerm={searchTerm} 
                     onMovieClick={setSelectedContent} 
                   />
@@ -170,6 +163,7 @@ function App() {
                 allContent={allContent} 
                 onClose={() => setSelectedContent(null)}
                 onContentChange={setSelectedContent}
+                onSearch={setSearchTerm} 
               />
            </Suspense>
         )}

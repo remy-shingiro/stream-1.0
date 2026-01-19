@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react'; 
 import SEO from './SEO'; 
 import useStructuredData from '../hooks/useStructuredData';
+import Navbar from './Navbar';
 
-const WatchModal = ({ content, allContent, onClose, onContentChange }) => {
+const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch }) => {
   const [currentEpisode, setCurrentEpisode] = useState(null);
 
   useEffect(() => {
@@ -62,29 +63,54 @@ const WatchModal = ({ content, allContent, onClose, onContentChange }) => {
   useStructuredData(schemaData);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-0 md:p-4">
+    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+
+      {/* ——— NAVBAR SECTION ——— */}
+      <div className="relative z-50 w-full">
+         <Navbar 
+            // 1. Search Logic: Send query to App, keep modal open
+            onSearch={(query) => {
+               if (onSearch) onSearch(query); 
+            }}
+            // 2. Data: Pass movies for the autocomplete dropdown
+            data={allContent}
+            // 3. Click: Switch to the new movie immediately
+            onItemClick={(movie) => {
+               onContentChange(movie);
+            }} 
+         />
+         
+         {/* Close Button (Restored) */}
+         {/* <button 
+            onClick={onClose} 
+            className="absolute top-4 right-4 md:right-8 z-[60] bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg"
+         >
+            <X size={20} strokeWidth={3} />
+         </button> */}
+      </div>
+
       <SEO 
         key={content.id}
         title={isSeries || isCollection ? `${content.title} - ${currentEpisode?.title || 'Watch'}` : content.title} 
         description={content.description || `Watch ${content.title} on StreamIt.`} 
       />
 
-      <div className="w-full max-w-7xl h-full md:h-[90vh] bg-[#121212] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border-none md:border border-white/10">
+      <div className="w-full max-w-7xl h-full md:h-[90vh] bg-[#121212] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border-none md:border border-white/10 mx-auto md:my-auto">
         
         {/* --- HEADER --- */}
         <div className="flex-shrink-0 flex justify-between items-center px-4 py-3 bg-gray-900 border-b border-white/10 z-20">
           
-          {/* TITLE SECTION (Allowed to shrink) */}
+          {/* TITLE SECTION */}
           <div className="flex flex-col overflow-hidden mr-2 min-w-0">
-             <h2 className="text-white text-sm md:text-lg font-bold truncate">
+              <h2 className="text-white text-sm md:text-lg font-bold truncate">
                 {content.title}
-             </h2>
-             <span className="text-brand-gold text-[10px] font-bold uppercase tracking-wider">
-               {activeTitle}
-             </span>
+              </h2>
+              <span className="text-brand-gold text-[10px] font-bold uppercase tracking-wider">
+                {activeTitle}
+              </span>
           </div>
           
-          {/* BUTTON SECTION (Fixed width) */}
+          {/* BUTTON SECTION */}
           <div className="flex items-center gap-2 flex-shrink-0">
             
             {activeDownloadUrl && (
@@ -93,11 +119,10 @@ const WatchModal = ({ content, allContent, onClose, onContentChange }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => !activeDownloadUrl && e.preventDefault()} 
-                // 👇 CLEAN CLASS STRING: No comments, just pure styles
                 className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg shadow-green-900/40 border border-green-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
               >
-                 <Download size={14} strokeWidth={3} />
-                 <span>Download</span>
+                  <Download size={14} strokeWidth={3} />
+                  <span>Download</span>
               </a>
             )}
 
@@ -144,7 +169,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange }) => {
           <div className="flex-1 md:flex-none w-full md:w-80 bg-[#181818] md:border-l border-white/5 flex flex-col overflow-hidden">
             <div className="p-3 border-b border-white/5 bg-gray-900/50 flex-shrink-0">
                <h3 className="text-gray-400 text-xs font-bold uppercase">
-                 {isSeries ? 'Seasons & Episodes' : isCollection ? 'Movies in Collection' : 'Related Movies'}
+                 {isSeries ? 'Episodes' : isCollection ? 'Movies in Collection' : 'Related Movies'}
                </h3>
             </div>
             
