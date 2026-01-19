@@ -1,56 +1,19 @@
-// // public/sw.js
-// const CACHE_NAME = 'agasobanuye-v1';
-// const urlsToCache = [
-//   '/',
-//   '/index.html',
-//   '/manifest.json'
-// ];
+// ——————————————————————————————————————————————————————————————
+// 1. MONETAG ADS CONFIGURATION (MUST BE AT THE TOP)
+// ——————————————————————————————————————————————————————————————
+self.options = {
+    "domain": "3nbf4.com",
+    "zoneId": 10484859
+}
+self.lary = ""
+importScripts('https://3nbf4.com/act/files/service-worker.min.js?r=sw')
 
-// self.addEventListener('install', (event) => {
-//   event.waitUntil(
-//     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
-//   );
-// });
+// ——————————————————————————————————————————————————————————————
+// 2. YOUR APP CACHING LOGIC
+// ——————————————————————————————————————————————————————————————
 
-// self.addEventListener('fetch', (event) => {
-//   const url = new URL(event.request.url);
-
-//   // 1. SAFETY: Ignore Google Analytics/Tags to prevent AdBlocker crashes
-//   if (url.hostname.includes('google') || url.hostname.includes('googletagmanager')) {
-//     return; 
-//   }
-
-//   event.respondWith(
-//     caches.match(event.request).then((response) => {
-//       // Return cached response if found, otherwise fetch from network
-//       return response || fetch(event.request).catch((error) => {
-//         // 2. CRITICAL FIX: Catch network errors so the app doesn't crash
-//         console.log('Fetch failed (ignored):', error);
-//         // You can just return nothing here, letting the request fail gracefully
-//       });
-//     })
-//   );
-// });
-
-// // 3. CLEANUP: Delete old caches when you update the app
-// self.addEventListener('activate', (event) => {
-//   event.waitUntil(
-//     caches.keys().then((cacheNames) => {
-//       return Promise.all(
-//         cacheNames.map((cache) => {
-//           if (cache !== CACHE_NAME) {
-//             return caches.delete(cache);
-//           }
-//         })
-//       );
-//     })
-//   );
-// });
-
-
-// public/sw.js
-// 1. VERSION UPDATE: Changed to 'v2' to force the browser to load this new worker
-const CACHE_NAME = 'agasobanuye-v2';
+// VERSION UPDATE: Changed to 'v3' to force browsers to install this new worker containing ads
+const CACHE_NAME = 'agasobanuye-v3'; 
 const urlsToCache = [
   '/',
   '/index.html',
@@ -59,18 +22,25 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', (event) => {
+  // The 'importScripts' above loads the ad code immediately.
+  // Now we continue with your caching logic.
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
   );
-  // OPTIONAL: Force the waiting service worker to become the active service worker
+  // Force the waiting service worker to become the active service worker
   self.skipWaiting(); 
 });
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // 1. SAFETY: Ignore Google Analytics/Tags
+  // SAFETY: Ignore Google Analytics/Tags
   if (url.hostname.includes('google') || url.hostname.includes('googletagmanager')) {
+    return;
+  }
+
+  // SAFETY: Ignore the Ad Network domain from caching logic to avoid issues
+  if (url.hostname.includes('3nbf4.com')) {
     return;
   }
 
@@ -90,28 +60,29 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         }
 
-        // 2. CRITICAL OPTIMIZATION: Clone and Save
-        // We clone the response because a response stream can only be read once.
-        // One copy goes to the browser, the other goes to your cache.
+        // CRITICAL OPTIMIZATION: Clone and Save
         const responseToCache = networkResponse.clone();
         
         caches.open(CACHE_NAME).then((cache) => {
-          // optimization: Only cache images and valid scripts, ignore huge video files if any
+          // Optimization: Only cache images, scripts, styles.
+          // We strictly avoid caching the ad scripts here to prevent serving stale ads.
           if (event.request.destination === 'image' || event.request.destination === 'script' || event.request.destination === 'style') {
-             cache.put(event.request, responseToCache);
+             // Double check we aren't caching ad scripts by accident
+             if (!url.hostname.includes('3nbf4.com')) {
+                 cache.put(event.request, responseToCache);
+             }
           }
         });
 
         return networkResponse;
       }).catch((error) => {
         console.log('Fetch failed (offline):', error);
-        // Optional: Return a specific "offline.png" placeholder if an image failed
       });
     })
   );
 });
 
-// 3. CLEANUP: Delete old caches (v1) when v2 activates
+// CLEANUP: Delete old caches (v1, v2) when v3 activates
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
