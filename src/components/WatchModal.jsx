@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react'; 
-import SEO from './SEO'; 
-import useStructuredData from '../hooks/useStructuredData';
+import SEO from './SEO'; // <--- Using the new SEO Engine
 import Navbar from './Navbar';
 
 const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch }) => {
@@ -23,6 +22,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
   const isCollection = content.type === 'collection';
   const isSeries = content.type === 'series';
 
+  // --- LOGIC: Determine Active Video & Image ---
   const activeVideoUrl = (isSeries || isCollection)
     ? (currentEpisode?.link || currentEpisode?.video_url || currentEpisode?.videoUrl) 
     : (content.video_url || content.videoUrl || content.link);
@@ -36,6 +36,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
     ? getDownloadLink(currentEpisode)
     : getDownloadLink(content);
 
+  // --- LOGIC: Active Title for UI ---
   let activeTitle = "Movie";
   if (isSeries && currentEpisode) {
     const sIdx = content.seasons.findIndex(s => s.episodes.includes(currentEpisode));
@@ -45,59 +46,49 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
     activeTitle = `Part ${partIdx + 1}`;
   }
 
-  // --- SEO ---
-  const schemaData = (isSeries || isCollection) && currentEpisode ? {
-    "@context": "https://schema.org",
-    "@type": "TVEpisode",
-    "name": currentEpisode.title || content.title,
-    "partOfSeries": { "@type": "TVSeries", "name": content.title },
-    "episodeNumber": currentEpisode.episodeNumber || "1",
-    "image": content.poster_url || content.image,
-  } : {
-    "@context": "https://schema.org",
-    "@type": "Movie",
-    "name": content.title,
-    "image": content.poster_url || content.image,
-  };
+  // --- NEW SEO PREPARATION (The Traffic Controller) ---
+  // 1. Calculate the exact title Google should see
+  const seoTitle = (isSeries || isCollection) && currentEpisode
+    ? `${content.title} - ${currentEpisode.title || activeTitle}`
+    : content.title;
+  
+  // 2. Calculate the exact image WhatsApp should show
+  const seoImage = (isSeries && currentEpisode?.image) 
+    ? currentEpisode.image 
+    : (content.poster_url || content.image);
 
-  useStructuredData(schemaData);
+  // 3. Get file size for the "Click Bait" title (fallback to empty if missing)
+  const seoSize = content.size || content.sizeMB || ""; 
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
 
+      {/* --- INJECT THE NEW SEO ENGINE --- */}
+      {/* This automatically updates Google & WhatsApp when you switch episodes */}
+      <SEO 
+        title={`${seoTitle} - Agasobanuye ${content.interpreter || ''}`} 
+        description={content.description || `Reba ${seoTitle} yasobanuwe na ${content.interpreter}. Genre: ${content.genre}.`} 
+        image={seoImage}
+        url={`https://agasobanuyefilime.com/watch/${content.id}`}
+        // Programmatic Data
+        genre={content.genre || "Agasobanuye"}
+        interpreter={content.interpreter || "Vj"}
+        uploadDate={content.created_at || new Date().toISOString()}
+      />
+
       {/* ——— NAVBAR SECTION ——— */}
       <div className="relative z-50 w-full">
          <Navbar 
-            onSearch={(query) => {
-               if (onSearch) onSearch(query); 
-            }}
+            onSearch={(query) => { if (onSearch) onSearch(query); }}
             data={allContent}
-            onItemClick={(movie) => {
-               onContentChange(movie);
-            }} 
+            onItemClick={(movie) => { onContentChange(movie); }} 
          />
-         
-         {/* Close Button */}
-         {/* <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 md:right-8 z-[60] bg-red-600 hover:bg-red-700 text-white rounded-full p-1.5 shadow-lg"
-         >
-            <X size={20} strokeWidth={3} />
-         </button> */}
       </div>
-
-      <SEO 
-        key={content.id}
-        title={isSeries || isCollection ? `${content.title} - ${currentEpisode?.title || 'Watch'}` : content.title} 
-        description={content.description || `Watch ${content.title} on StreamIt.`} 
-      />
 
       <div className="w-full max-w-7xl h-full md:h-[90vh] bg-[#121212] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border-none md:border border-white/10 mx-auto md:my-auto">
         
         {/* --- HEADER --- */}
         <div className="flex-shrink-0 flex justify-between items-center px-4 py-3 bg-gray-900 border-b border-white/10 z-20">
-          
-          {/* TITLE SECTION */}
           <div className="flex flex-col overflow-hidden mr-2 min-w-0">
               <h2 className="text-white text-sm md:text-lg font-bold truncate">
                 {content.title}
@@ -107,9 +98,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
               </span>
           </div>
           
-          {/* BUTTON SECTION */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            
             {activeDownloadUrl && (
               <a 
                 href={activeDownloadUrl} 
@@ -119,7 +108,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                 className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg shadow-green-900/40 border border-green-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
               >
                   <Download size={14} strokeWidth={3} />
-                  <span>Download</span>
+                  <span>Download {seoSize ? `(${seoSize})` : ''}</span>
               </a>
             )}
 
@@ -137,9 +126,6 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
           
           {/* LEFT: VIDEO PLAYER */}
           <div className="w-full md:flex-1 flex flex-col bg-black md:overflow-y-auto shrink-0">
-            
-            {/* 👇 FIX APPLIED HERE: Changed 'h-[65vh]' to 'aspect-video' */}
-            {/* This keeps the video 16:9 on mobile, leaving space for the list below */}
             <div className="w-full aspect-video md:h-auto md:flex-1 lg:flex-none lg:aspect-video bg-black flex items-center justify-center flex-shrink-0 relative">
                {activeVideoUrl ? (
                 <iframe 
@@ -165,7 +151,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
             </div>
           </div>
 
-          {/* RIGHT: LIST (Now visible on mobile!) */}
+          {/* RIGHT: LIST */}
           <div className="flex-1 md:flex-none w-full md:w-80 bg-[#181818] md:border-l border-white/5 flex flex-col overflow-hidden">
             <div className="p-3 border-b border-white/5 bg-gray-900/50 flex-shrink-0">
                <h3 className="text-gray-400 text-xs font-bold uppercase">
