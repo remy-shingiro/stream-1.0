@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom'; 
 import Hero from '../components/Hero';
 import MovieCard from '../components/MovieCard';
@@ -6,30 +5,24 @@ import useStructuredData from '../hooks/useStructuredData';
 
 const Home = ({ contentData, onMovieClick, searchTerm }) => {
 
-  // Tell Google this is a search engine/streaming site
+  // SEO Configuration
   useStructuredData({
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Agasobanuye Filime",
     "url": "https://agasobanuyefilime.com/",
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": "https://agasobanuyefilime.com/search?q={search_term_string}",
-      "query-input": "required name=search_term_string"
-    }
   });
   
-  // Safety Check
   if (!contentData) return null;
 
-  // Filter logic
   const filteredContent = contentData.filter((item) =>
     item.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div>
-      {/* HERO SECTION - Only show if NOT searching */}
+    <div className="min-h-screen bg-[#0f0f0f]">
+      
+      {/* 1. HERO SECTION (Only shows if NOT searching) */}
       {!searchTerm && (
         <Hero 
           movies={contentData.slice(0, 5)} 
@@ -37,35 +30,38 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
         />
       )}
 
-      {/* MOVIE GRID */}
-      <div className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto -mt-20 relative z-10 pb-20">
-        <h2 className="text-2xl font-bold text-white mb-6 border-l-4 border-brand-gold pl-3">
-          {searchTerm ? `Search Results: "${searchTerm}"` : "Filime nshya & Series"}
-        </h2>
+      {/* 2. MOVIE GRID CONTAINER */}
+      {/* CHANGED: Removed '-mt-20'. Added 'mt-10' to push it down. */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-10 relative z-10">
+        
+        {/* Section Title */}
+        <div className="flex items-center justify-between mb-8">
+           <div className="flex items-center gap-3">
+             <div className="w-1.5 h-8 bg-brand-gold rounded-full shadow-[0_0_10px_#FFD700]"></div>
+             <h2 className="text-2xl md:text-3xl font-bold text-white uppercase tracking-wide">
+               {searchTerm ? `Results: "${searchTerm}"` : "Filime nshya & Series"}
+             </h2>
+           </div>
+        </div>
 
+        {/* Grid Content */}
         {filteredContent.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8">
-            
-            {/* 1. SPEED FIX: Added 'index' to the map function */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
             {filteredContent.map((item, index) => (
-              
-              <Link key={item.id} to={`/watch/${item.id}`} className="block">
-                
+              <Link key={item.id} to={`/watch/${item.id}`} className="block w-full">
                 <MovieCard 
-                  /* 2. LOGIC FIX: Pass the WHOLE item. 
-                     If you only pass {title, image}, the badges (Seasons/Parts) won't show 
-                     because they need 'item.seasons' and 'item.type'. */
                   movie={item}
-                  
-                  /* 3. LCP FIX: Pass the index so the first card knows to load instantly */
                   index={index}
                 />
-                
               </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center text-gray-500 py-20">No movies found.</div>
+          <div className="flex flex-col items-center justify-center py-32 text-gray-500 opacity-50">
+             <div className="text-6xl mb-4">😕</div>
+             <p className="text-xl font-bold">Nta filime ibonetse</p>
+             <p className="text-sm">Gerageza gushaka iyindi</p>
+          </div>
         )}
       </div>
     </div>

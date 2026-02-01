@@ -1,87 +1,130 @@
-
-import { Play } from 'lucide-react'; // Ensure you have this icon installed
+import { Play } from 'lucide-react'; 
 
 const Hero = ({ movies = [], onPlay }) => {
-  // 1. Safety Check: If no movies, show nothing
   if (!movies || movies.length === 0) return null;
 
-  // 2. LOGIC: Just grab the first movie (The Latest Added)
-  const latestMovie = movies[0];
+  // 1. Data for Mobile (Just the 1st one)
+  const mobileMovie = movies[0];
 
-  // 3. Helper for download link
-  const getDownloadLink = (item) => {
-     return item.download_url || item.downloadUrl || item.link || item.url || null;
+  // 2. Data for Desktop (The top 3 movies)
+  const desktopMovies = movies.slice(0, 3);
+
+  // Helper to determine badge text
+  const getBadge = (movie) => {
+    if (movie.type === 'series') {
+      return `Season ${movie.seasons?.length || 1}`;
+    }
+    if (movie.type === 'collection') {
+      return `${movie.seasons?.[0]?.episodes?.length || 1} Parts`;
+    }
+    return 'HD';
   };
-  const downloadUrl = getDownloadLink(latestMovie);
 
   return (
-    <div className="relative h-[85vh] w-full overflow-hidden group">
+    <div className="w-full bg-[#0f0f0f]">
       
-      {/* BACKGROUND IMAGE (Static & Fast) */}
-      <div className="absolute inset-0">
-        <img 
-          src={latestMovie.poster_url || latestMovie.image} 
-          alt={latestMovie.title}
-          
-          // --- 🚀 THE SPEED OPTIMIZATION ---
-          fetchPriority="high"   // Download First
-          loading="eager"        // Don't wait
-          decoding="sync"        // Paint immediately
-          // ---------------------------------
+      {/* =======================================================
+          MOBILE VIEW (Phones Only) - Remains 1 Big Image
+         ======================================================= */}
+      <div className="block md:hidden relative h-[65vh] w-full overflow-hidden group">
+        <div className="absolute inset-0">
+          <img 
+            src={mobileMovie.poster_url || mobileMovie.image} 
+            alt={mobileMovie.title}
+            loading="eager"
+            className="h-full w-full object-cover" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-[#0f0f0f]/50 to-transparent" />
+        </div>
 
-          className="h-full w-full object-cover transition-transform duration-[10000ms] ease-linear transform scale-100 group-hover:scale-110" 
-        />
-        {/* Dark Overlays for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#050505] via-[#050505]/20 to-transparent" />
-      </div>
-
-      {/* CONTENT */}
-      <div className="relative h-full flex items-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto z-10">
-        <div className="max-w-2xl mt-20">
-          
-          <span className="bg-brand-gold text-black text-xs font-bold px-3 py-1 rounded-sm uppercase tracking-wider mb-4 inline-block shadow-lg">
-            #1 New Arrival
-          </span>
-          
-          <h1 className="text-4xl md:text-7xl font-extrabold mb-4 leading-tight text-white drop-shadow-2xl">
-            {latestMovie.title}
-          </h1>
-          
-          <p className="text-base md:text-lg text-gray-200 mb-8 line-clamp-3 max-w-xl drop-shadow-md">
-            {latestMovie.description || "Ntucikwe na filime nziza cyane zigezweho. Reba ubu nonaha kuri Agasobanuye Films."}
-          </p>
-          
-          <div className="flex flex-wrap gap-4">
-            {/* Play Button */}
+        <div className="relative h-full flex items-end px-4 pb-10 z-10">
+          <div>
+            <span className="bg-brand-gold text-black text-[10px] font-bold px-2 py-0.5 rounded mb-3 inline-block uppercase tracking-wider shadow-md">
+              #1 Trending
+            </span>
+            <h1 className="text-4xl font-black mb-4 leading-none text-white drop-shadow-2xl uppercase">
+              {mobileMovie.title}
+            </h1>
             <button 
-              onClick={() => onPlay(latestMovie)}
-              className="bg-brand-gold hover:bg-yellow-500 text-black px-8 py-3.5 rounded-sm font-bold transition transform hover:scale-105 flex items-center gap-3 shadow-lg"
+              onClick={() => onPlay(mobileMovie)}
+              className="bg-brand-gold text-black px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg hover:bg-white transition-colors"
             >
-              <Play fill="black" size={20} />
+              <Play fill="black" size={18} />
               <span>REBA FILIME</span>
             </button>
-
-            {/* Download Button */}
-            <a 
-              href={downloadUrl || "#"}
-              target={downloadUrl ? "_blank" : "_self"}
-              onClick={(e) => !downloadUrl && e.preventDefault()}
-              className={`
-                px-8 py-3.5 rounded-sm font-bold flex items-center gap-3 border transition-all
-                ${downloadUrl 
-                  ? "bg-white/10 backdrop-blur-md border-white/30 text-white hover:bg-white hover:text-black" 
-                  : "bg-gray-800/50 border-gray-700 text-gray-400 cursor-not-allowed"
-                }
-              `}
-            >
-              <span className="text-xl font-bold">⬇</span> 
-              <span>DOWNLOAD</span>
-            </a>
           </div>
-
         </div>
       </div>
+
+      {/* =======================================================
+          DESKTOP VIEW (3 Vertical Columns)
+         ======================================================= */}
+      <div className="hidden md:grid grid-cols-3 h-[85vh] w-full border-b border-white/5">
+        {desktopMovies.map((movie, index) => (
+          <div 
+            key={movie.id || index} 
+            className="relative h-full w-full group overflow-hidden border-r border-white/5 last:border-r-0 cursor-pointer"
+            onClick={() => onPlay(movie)}
+          >
+            
+            {/* 1. Background Image (Zooms on Hover) */}
+            <div className="absolute inset-0">
+              <img 
+                src={movie.poster_url || movie.image} 
+                alt={movie.title}
+                className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110 opacity-80 group-hover:opacity-100" 
+              />
+              
+              {/* Dark Gradient Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0f0f0f] via-black/40 to-transparent opacity-90 group-hover:opacity-80 transition-opacity" />
+              
+              {/* Hover Highlight (Lightens the whole col) */}
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500" />
+            </div>
+
+            {/* 2. Top Right Badge (Season/HD) */}
+            <div className="absolute top-24 right-6 z-20">
+               <span className="bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1 rounded uppercase tracking-wider">
+                 {getBadge(movie)}
+               </span>
+            </div>
+
+            {/* 3. Bottom Content (Slides Up on Hover) */}
+            <div className="relative h-full flex flex-col justify-end p-8 z-20 pb-16">
+              
+              {/* Title */}
+              <h2 className="text-3xl lg:text-5xl font-black text-white mb-3 leading-[0.9] drop-shadow-xl uppercase transform origin-left transition-transform duration-300 group-hover:scale-105">
+                {movie.title}
+              </h2>
+
+              {/* Meta Info (Year | Genre) */}
+              <div className="flex items-center gap-3 text-gray-400 text-sm font-medium mb-4">
+                 <span>{movie.year || '2025'}</span>
+                 <span className="w-1 h-1 bg-brand-gold rounded-full"></span>
+                 <span className="uppercase tracking-widest text-brand-gold">{movie.genre || 'Action'}</span>
+              </div>
+
+              {/* Description (Fades In) */}
+              <p className="text-gray-300 text-sm mb-6 line-clamp-2 max-w-md opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-out">
+                {movie.description || "Reba iyi filime isobanuye neza hano kuri Agasobanuye Films."}
+              </p>
+
+              {/* Button (Slides Up) */}
+              <div className="transform translate-y-8 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 delay-75">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); onPlay(movie); }}
+                  className="bg-brand-gold hover:bg-white hover:text-black text-black px-8 py-3 rounded-full font-bold flex items-center gap-2 shadow-[0_0_20px_rgba(255,215,0,0.3)] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)] transition-all"
+                >
+                  <Play fill="black" size={18} />
+                  <span>REBA FILIME</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        ))}
+      </div>
+
     </div>
   );
 };
