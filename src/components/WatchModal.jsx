@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Download, X } from 'lucide-react'; 
-import SEO from './SEO'; // <--- Using the new SEO Engine
+import { Download, X, ExternalLink } from 'lucide-react'; 
+import SEO from './SEO'; 
 import Navbar from './Navbar';
 
 const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch }) => {
@@ -46,31 +46,25 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
     activeTitle = `Part ${partIdx + 1}`;
   }
 
-  // --- NEW SEO PREPARATION (The Traffic Controller) ---
-  // 1. Calculate the exact title Google should see
+  // --- SEO ---
   const seoTitle = (isSeries || isCollection) && currentEpisode
     ? `${content.title} - ${currentEpisode.title || activeTitle}`
     : content.title;
   
-  // 2. Calculate the exact image WhatsApp should show
   const seoImage = (isSeries && currentEpisode?.image) 
     ? currentEpisode.image 
     : (content.poster_url || content.image);
 
-  // 3. Get file size for the "Click Bait" title (fallback to empty if missing)
   const seoSize = content.size || content.sizeMB || ""; 
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
 
-      {/* --- INJECT THE NEW SEO ENGINE --- */}
-      {/* This automatically updates Google & WhatsApp when you switch episodes */}
       <SEO 
         title={`${seoTitle} - Agasobanuye ${content.interpreter || ''}`} 
         description={content.description || `Reba ${seoTitle} yasobanuwe na ${content.interpreter}. Genre: ${content.genre}.`} 
         image={seoImage}
         url={`https://agasobanuyefilime.com/watch/${content.id}`}
-        // Programmatic Data
         genre={content.genre || "Agasobanuye"}
         interpreter={content.interpreter || "Vj"}
         uploadDate={content.created_at || new Date().toISOString()}
@@ -99,6 +93,24 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
+            
+            {/* 1. BLUE BUTTON: REBA FILIME (Opens in New Tab) */}
+            {activeVideoUrl && (
+              <a 
+                href={activeVideoUrl} 
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => !activeVideoUrl && e.preventDefault()}
+                className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg shadow-blue-900/40 border border-blue-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
+                title="Reba muri External Player"
+              >
+                  <ExternalLink size={14} strokeWidth={3} />
+                  <span className="hidden sm:inline">REBA FILIME</span>
+                  <span className="sm:hidden">REBA</span>
+              </a>
+            )}
+
+            {/* 2. GREEN BUTTON: DOWNLOAD */}
             {activeDownloadUrl && (
               <a 
                 href={activeDownloadUrl} 
