@@ -8,13 +8,11 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
 
-  // 1. PERFORMANCE: Debounce the "Heavy" Search
-  // Waits 500ms after you stop typing before updating the main page.
+  // 1. PERFORMANCE: Debounce Search
   useEffect(() => {
     const timer = setTimeout(() => {
       if (onSearch) onSearch(searchQuery);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchQuery, onSearch]);
 
@@ -31,13 +29,13 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
 
   const handleSearchChange = (e) => {
     const query = e.target.value;
-    setSearchQuery(query); // Update text immediately
+    setSearchQuery(query); 
     
-    // 2. Suggestions are INSTANT (No delay here)
+    // Suggestions logic
     if (query.trim().length > 1 && data.length > 0) {
       const matches = data
         .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
-        .slice(0, 5); // Show top 5 results
+        .slice(0, 5);
       setSuggestions(matches);
     } else {
       setSuggestions([]);
@@ -45,10 +43,10 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
   };
 
   const handleSuggestionClick = (movie) => {
-    setSearchQuery('');       // Clear input
-    setSuggestions([]);       // Close dropdown
-    setIsSearchOpen(false);   // Close mobile search
-    if (onItemClick) onItemClick(movie); // Open movie immediately
+    setSearchQuery('');      
+    setSuggestions([]);      
+    setIsSearchOpen(false);   
+    if (onItemClick) onItemClick(movie); 
   };
 
   const toggleMenu = () => {
@@ -66,7 +64,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           
-          {/* --- LOGO (Your Original Style) --- */}
+          {/* --- LOGO --- */}
           <a href="/" className="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
             <div className="w-10 h-10 rounded-full border-2 border-red-600 flex items-center justify-center group-hover:border-red-500 transition">
               <span className="text-red-600 font-bold text-xl group-hover:text-red-500 pt-0.5 pl-0.5">▶</span>
@@ -77,32 +75,52 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             </div>
           </a>
 
-          {/* --- DESKTOP NAVIGATION --- */}
-          <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
-            <a href="/" className="hover:text-brand-gold transition">Ahabanza</a>
-            <a href="/seasons" className="hover:text-brand-gold transition">Action</a>
-            <a href="/seasons" className="hover:text-brand-gold transition">Seasons</a>
-            <a href="/" className="hover:text-brand-gold transition">Film zose</a>
+          {/* --- DESKTOP NAVIGATION (YELLOW BUTTONS) --- */}
+          <div className="hidden md:flex items-center space-x-4">
+            <a 
+              href="/" 
+              // Changed: bg-brand-gold text-black (Yellow default) -> hover:bg-red-600 hover:text-white
+              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
+            >
+              Ahabanza
+            </a>
+            <a 
+              href="/seasons" 
+              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
+            >
+              Action
+            </a>
+            <a 
+              href="/seasons" 
+              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
+            >
+              Seasons
+            </a>
+            <a 
+              href="/" 
+              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
+            >
+              Film zose
+            </a>
           </div>
 
           {/* --- RIGHT SIDE: SEARCH & MENU --- */}
           <div className="flex items-center gap-4 relative">
             
-            {/* DESKTOP SEARCH INPUT (With Your Width Logic) */}
+            {/* DESKTOP SEARCH INPUT */}
             <div className="relative hidden md:block">
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={handleSearchChange}
                 placeholder="Shakisha filme..." 
-                // Uses your specific width classes: w-40 -> md:w-48 -> lg:focus:w-64
                 className="bg-white text-black pl-3 pr-10 py-2 rounded-sm text-sm focus:outline-none w-40 md:w-48 lg:w-48 lg:focus:w-64 transition-all"
               />
               <button className="absolute right-0 top-0 h-full px-3 bg-brand-gold text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center pointer-events-none">
-                 <Search size={16} />
+                  <Search size={16} />
               </button>
 
-              {/* DESKTOP SUGGESTIONS DROPDOWN */}
+              {/* SUGGESTIONS DROPDOWN */}
               {suggestions.length > 0 && (
                 <div className="absolute top-full mt-2 right-0 w-72 bg-brand-dark border border-white/10 rounded-md shadow-2xl overflow-hidden z-50">
                   {suggestions.map((movie) => (
@@ -133,7 +151,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
         </div>
       </div>
 
-      {/* --- MOBILE SEARCH BAR (With Suggestions) --- */}
+      {/* --- MOBILE SEARCH BAR --- */}
       {isSearchOpen && (
         <div className="md:hidden bg-brand-dark p-4 border-b border-white/10 relative">
           <div className="relative flex gap-2">
@@ -150,7 +168,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             </button>
           </div>
 
-          {/* MOBILE SUGGESTIONS LIST */}
+          {/* MOBILE SUGGESTIONS */}
           {suggestions.length > 0 && (
             <div className="mt-2 bg-[#181818] rounded-md border border-white/10 shadow-xl z-50 relative">
                {suggestions.map((movie) => (
@@ -175,10 +193,10 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-brand-dark border-t border-white/10">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <a href="/" className="block px-3 py-3 rounded-md text-base font-medium text-white hover:text-brand-gold hover:bg-white/5">Ahabanza</a>
-            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Action</a>
-            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Seasons</a>
-            <a href="/" className="block px-3 py-3 rounded-md text-base font-medium text-gray-300 hover:text-brand-gold hover:bg-white/5">Film zose</a>
+            <a href="/" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Ahabanza</a>
+            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Action</a>
+            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Seasons</a>
+            <a href="/" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Film zose</a>
           </div>
         </div>
       )}
