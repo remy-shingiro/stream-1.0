@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, Suspense, lazy } from 'react'; 
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ReactGA from "react-ga4"; 
 
@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // 2. DYNAMIC IMPORTS
 const Home = lazy(() => import('./pages/Home'));
 const WatchPage = lazy(() => import('./pages/WatchPage'));
+const MovieDetails = lazy(() => import('./pages/MovieDetails')); // 👈 Middle page for revenue
 const AdminPanel = lazy(() => import('./components/AdminPanel')); 
 const Login = lazy(() => import('./components/Login'));
 const WatchModal = lazy(() => import('./components/WatchModal')); 
@@ -26,43 +27,119 @@ const AnalyticsTracker = () => {
   return null;
 };
 
+// --- NAVIGATION WRAPPER ---
+const AppContent = ({ 
+  allContent, 
+  seriesContent, 
+  searchTerm, 
+  setSearchTerm, 
+  selectedContent, 
+  setSelectedContent 
+}) => {
+  const navigate = useNavigate();
+
+  // This function handles the "Funnel" logic: Home -> Movie Details
+  const handleNavigation = (movie) => {
+    // 1. If you want to clear any open modal first
+    setSelectedContent(null);
+    // 2. Navigate to the intermediate details page
+    navigate(`/movie/${movie.id}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] font-sans relative">
+      <Toaster position="bottom-right" reverseOrder={false} />
+      
+      <Navbar 
+          onSearch={setSearchTerm} 
+          data={allContent}
+          onItemClick={handleNavigation} // Redirects search clicks to details
+      />
+
+      {/* Main Routing logic */}
+      <div className={selectedContent ? "hidden" : "block"}>
+        <Suspense fallback={<SkeletonLoader />}>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <Home 
+                  contentData={allContent} 
+                  searchTerm={searchTerm} 
+                  onMovieClick={handleNavigation} 
+                />
+              } 
+            />
+            <Route 
+              path="/seasons" 
+              element={
+                <Home 
+                  contentData={searchTerm ? allContent : seriesContent} 
+                  searchTerm={searchTerm} 
+                  onMovieClick={handleNavigation} 
+                />
+              } 
+            />
+            
+            {/* ——— THE REVENUE GENERATOR ——— */}
+            <Route path="/movie/:id" element={<MovieDetails allContent={allContent} />} />
+            
+            <Route path="/watch/:id" element={<WatchPage allMovies={allContent} />} />
+            <Route path="/login" element={<Login />} />
+            
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute>
+                  <AdminPanel movies={allContent} />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </Suspense>
+      </div>
+
+      {/* Watch Modal (If triggered manually or via specific player state) */}
+      {selectedContent && (
+         <Suspense fallback={<div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-white">Loading Player...</div>}>
+            <WatchModal 
+              content={selectedContent}
+              allContent={allContent} 
+              onClose={() => setSelectedContent(null)}
+              onContentChange={setSelectedContent}
+              onSearch={setSearchTerm} 
+            />
+         </Suspense>
+      )}
+
+      <Footer />
+    </div>
+  );
+};
+
 function App() {
-  // ---------------------------------------------------------------------------
-  // 3. OPTIMIZED STATE
-  // ---------------------------------------------------------------------------
   const [fetchedData, setFetchedData] = useState(() => {
     try {
       const saved = localStorage.getItem('site_content_cache');
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
-      console.warn("Cache parse error", e);
       return [];
     }
   });
 
-  const [isLoading, setIsLoading] = useState(() => {
-    const saved = localStorage.getItem('site_content_cache');
-    return !saved; 
-  });
-
+  const [isLoading, setIsLoading] = useState(() => !localStorage.getItem('site_content_cache'));
   const [selectedContent, setSelectedContent] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     ReactGA.initialize("G-6N373FLFPF"); 
-  }, []);
-
-  // ---------------------------------------------------------------------------
-  // 4. DATA FETCH
-  // ---------------------------------------------------------------------------
-  useEffect(() => {
     const loadContent = async () => {
       try {
         const data = await fetchAllData();
         localStorage.setItem('site_content_cache', JSON.stringify(data));
         setFetchedData(data);
       } catch (error) {
-        console.error("Failed to update content", error);
+        console.error("Failed to update", error);
       } finally {
         setIsLoading(false);
       }
@@ -73,13 +150,11 @@ function App() {
   const allContent = useMemo(() => {
     if (fetchedData.length === 0) return [];
     const seenIds = new Set();
-    
     return fetchedData.map((item) => {
       let uniqueId = item.id;
       let counter = 1;
       while (seenIds.has(uniqueId)) {
-        const newId = `${item.id}_copy${counter}`;
-        uniqueId = newId;
+        uniqueId = `${item.id}_copy${counter}`;
         counter++;
       }
       seenIds.add(uniqueId);
@@ -88,88 +163,22 @@ function App() {
   }, [fetchedData]);
 
   const seriesContent = useMemo(() => {
-    return allContent.filter(item => 
-      item.type === 'series' || item.category === 'Series'
-    );
+    return allContent.filter(item => item.type === 'series' || item.category === 'Series');
   }, [allContent]);
 
-  if (isLoading) {
-    return <SkeletonLoader />;
-  }
+  if (isLoading) return <SkeletonLoader />;
 
   return (
     <BrowserRouter>
       <AnalyticsTracker />
-      
-      <div className="min-h-screen bg-[#0f0f0f] font-sans relative">
-        <Toaster position="bottom-right" reverseOrder={false} />
-        
-        {/* ——— UPDATED NAVBAR (With Suggestions) ——— */}
-        <Navbar 
-            onSearch={setSearchTerm} 
-            data={allContent}                // 👈 Pass Data for suggestions
-            onItemClick={setSelectedContent} // 👈 Handle clicks
-        />
-
-        {/* --- PAGE CONTENT --- */}
-        <div className={selectedContent ? "hidden" : "block"}>
-          <Suspense fallback={
-            <div className="flex h-screen items-center justify-center text-white">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
-            </div>
-          }>
-            <Routes>
-              <Route 
-                path="/" 
-                element={
-                  <Home 
-                    contentData={allContent} 
-                    searchTerm={searchTerm} 
-                    onMovieClick={setSelectedContent} 
-                  />
-                } 
-              />
-              <Route 
-                path="/seasons" 
-                element={
-                  <Home 
-                    // ——— FIXED SEARCH LOGIC ———
-                    // If searching, check ALL content. If not, show only Series.
-                    contentData={searchTerm ? allContent : seriesContent} 
-                    searchTerm={searchTerm} 
-                    onMovieClick={setSelectedContent} 
-                  />
-                } 
-              />
-              <Route path="/watch/:id" element={<WatchPage allMovies={allContent} />} />
-              <Route path="/login" element={<Login />} />
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute>
-                    <AdminPanel movies={allContent} />
-                  </ProtectedRoute>
-                } 
-              />
-            </Routes>
-          </Suspense>
-        </div>
-
-        {/* --- WATCH MODAL --- */}
-        {selectedContent && (
-           <Suspense fallback={<div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-white">Loading Player...</div>}>
-              <WatchModal 
-                content={selectedContent}
-                allContent={allContent} 
-                onClose={() => setSelectedContent(null)}
-                onContentChange={setSelectedContent}
-                onSearch={setSearchTerm} 
-              />
-           </Suspense>
-        )}
-
-        <Footer />
-      </div>
+      <AppContent 
+        allContent={allContent}
+        seriesContent={seriesContent}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        selectedContent={selectedContent}
+        setSelectedContent={setSelectedContent}
+      />
     </BrowserRouter>
   );
 }
