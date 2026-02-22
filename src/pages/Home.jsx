@@ -21,24 +21,27 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
   );
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
+    <div className="min-h-screen bg-slate-950"> {/* Matches your Details and Watch page theme */}
       
       {/* 1. HERO SECTION */}
       {!searchTerm && (
-        <Hero 
-          movies={contentData.slice(0, 5)} 
-          // 👈 CHANGE: This ensures Hero buttons also go to the Details page
-          onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
-        />
+        /* FIXED: Added pt-2 (top padding) and reduced internal hero spacing */
+        <div className="pt-2 md:pt-4"> 
+          <Hero 
+            movies={contentData.slice(0, 5)} 
+            onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
+          />
+        </div>
       )}
 
       {/* 2. MOVIE GRID */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-10 relative z-10">
+      {/* FIXED: Reduced mt-10 to mt-2 to pull the grid up closer to the Kraven card */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-2 relative z-10">
         
         {/* --- SECTION HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10 border-b border-white/5 pb-6">
            <div className="flex items-center gap-3">
-             <div className="w-1.5 h-8 bg-brand-gold rounded-full shadow-[0_0_15px_#FFD700]"></div>
+             <div className="w-1.5 h-8 bg-[#fbbf24] rounded-full shadow-[0_0_15px_#fbbf24]"></div>
              <h2 className="text-2xl md:text-3xl font-black text-white uppercase tracking-wide drop-shadow-lg">
                {searchTerm ? `Results: "${searchTerm}"` : "Filime nshya & Series"}
              </h2>
@@ -54,7 +57,7 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
                </span>
                <Layers size={20} className="drop-shadow-md" />
-               <span className="drop-shadow-md">SEASONS ZOSE</span>
+               <span className="drop-shadow-md uppercase">Seasons Zose</span>
                <ChevronRight size={20} className="opacity-80 group-hover:translate-x-1 transition-transform" />
              </Link>
            )}
@@ -64,7 +67,6 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
         {filteredContent.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8">
             {filteredContent.map((item, index) => (
-              /* 👇 THE CRITICAL FIX: Changed /watch/ to /movie/ */
               <Link key={item.id} to={`/movie/${item.id}`} className="block w-full group">
                 <MovieCard 
                   movie={item}
@@ -75,8 +77,8 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-32 text-gray-500 opacity-50">
-             <div className="text-6xl mb-4">😕</div>
-             <p className="text-xl font-bold">Nta filime ibonetse</p>
+              <div className="text-6xl mb-4">😕</div>
+              <p className="text-xl font-bold">Nta filime ibonetse</p>
           </div>
         )}
       </div>

@@ -9,11 +9,13 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SkeletonLoader from './components/SkeletonLoader';
 import ProtectedRoute from './components/ProtectedRoute';
+// IMPORT THE NEW COMPONENT HERE
+import FloatingDonation from './components/FloatingDonation';
 
 // 2. DYNAMIC IMPORTS
 const Home = lazy(() => import('./pages/Home'));
 const WatchPage = lazy(() => import('./pages/WatchPage'));
-const MovieDetails = lazy(() => import('./pages/MovieDetails')); // 👈 Middle page for revenue
+const MovieDetails = lazy(() => import('./pages/MovieDetails')); 
 const AdminPanel = lazy(() => import('./components/AdminPanel')); 
 const Login = lazy(() => import('./components/Login'));
 const WatchModal = lazy(() => import('./components/WatchModal')); 
@@ -38,11 +40,8 @@ const AppContent = ({
 }) => {
   const navigate = useNavigate();
 
-  // This function handles the "Funnel" logic: Home -> Movie Details
   const handleNavigation = (movie) => {
-    // 1. If you want to clear any open modal first
     setSelectedContent(null);
-    // 2. Navigate to the intermediate details page
     navigate(`/movie/${movie.id}`);
   };
 
@@ -50,13 +49,15 @@ const AppContent = ({
     <div className="min-h-screen bg-[#0f0f0f] font-sans relative">
       <Toaster position="bottom-right" reverseOrder={false} />
       
+      {/* GLOBAL DONATION BUTTON - Visible on every page */}
+      <FloatingDonation />
+
       <Navbar 
           onSearch={setSearchTerm} 
           data={allContent}
-          onItemClick={handleNavigation} // Redirects search clicks to details
+          onItemClick={handleNavigation} 
       />
 
-      {/* Main Routing logic */}
       <div className={selectedContent ? "hidden" : "block"}>
         <Suspense fallback={<SkeletonLoader />}>
           <Routes>
@@ -81,9 +82,7 @@ const AppContent = ({
               } 
             />
             
-            {/* ——— THE REVENUE GENERATOR ——— */}
             <Route path="/movie/:id" element={<MovieDetails allContent={allContent} />} />
-            
             <Route path="/watch/:id" element={<WatchPage allMovies={allContent} />} />
             <Route path="/login" element={<Login />} />
             
@@ -99,7 +98,6 @@ const AppContent = ({
         </Suspense>
       </div>
 
-      {/* Watch Modal (If triggered manually or via specific player state) */}
       {selectedContent && (
          <Suspense fallback={<div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-white">Loading Player...</div>}>
             <WatchModal 
