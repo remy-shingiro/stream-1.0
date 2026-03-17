@@ -30,31 +30,35 @@ const WatchPage = ({ allMovies }) => {
     window.scrollTo(0, 0);
   }, [id, currentEpIndex]);
 
-  // --- THE TAB FLIP LOGIC (Applied to Watch & Download) ---
+  // --- THE TAB FLIP LOGIC (DISABLED/COMMENTED OUT) ---
   const handleActionTrigger = (targetUrl) => {
-    const adUrl = "https://omg10.com/4/10484905"; 
+    // const adUrl = "https://omg10.com/4/10484905"; 
 
     if (!targetUrl) return;
 
-    // 1. Open the Content/Download in a NEW tab
-    const newWindow = window.open(targetUrl, '_blank');
+    // 1. Open the Content/Download in a NEW tab directly without flipping current tab
+    window.open(targetUrl, '_blank');
 
+    /* // Commented out to stop tab flipping
+    const newWindow = window.open(targetUrl, '_blank');
     if (newWindow) {
       newWindow.focus();
-      
-      // 2. Flip this CURRENT "old" tab into the Ad
       setTimeout(() => {
         window.location.assign(adUrl);
       }, 300);
     } else {
       window.location.href = targetUrl;
     }
+    */
   };
 
   const handleEpisodeSwitch = (index) => {
+    // Navigate directly to the selected episode
+    navigate(`/watch/${id}?ep=${index}`);
+
+    /* // Commented out to stop tab flipping on episode switch
     const nextEpisodeUrl = `${window.location.origin}/watch/${id}?ep=${index}`;
     const adUrl = "https://omg10.com/4/10484905";
-
     const newWindow = window.open(nextEpisodeUrl, '_blank');
     if (newWindow) {
       newWindow.focus();
@@ -64,6 +68,7 @@ const WatchPage = ({ allMovies }) => {
     } else {
       navigate(`/watch/${id}?ep=${index}`);
     }
+    */
   };
 
   if (!movie) return (

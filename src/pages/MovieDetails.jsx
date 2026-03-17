@@ -17,36 +17,39 @@ const MovieDetails = ({ allContent }) => {
 
   if (!movie) return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fbbf24]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fbbf24]"></div>
     </div>
   );
 
   const handleRevenueTrigger = (e) => {
     if(e) e.preventDefault();
 
-    // LIVE MONETAG LINK
-    const adUrl = "https://omg10.com/4/10484905"; 
+    // --- TAB FLIP LOGIC DISABLED ---
+    // const adUrl = "https://omg10.com/4/10484905"; 
     const watchUrl = `${window.location.origin}/watch/${movie.id}`;
     
-    // OPEN MOVIE TAB INSTANTLY
+    // Simply navigate to the movie watch page directly in the current window
+    navigate(`/watch/${movie.id}`);
+
+    /* // Logic commented out to stop ads and tab flipping
     const newWindow = window.open(watchUrl, '_blank');
     setIsOptimizing(true);
 
     if (newWindow) {
         newWindow.focus();
-        // REDIRECT OLD TAB TO AD
         setTimeout(() => {
             window.location.assign(adUrl);
         }, 400);
     } else {
         window.location.href = watchUrl;
     }
+    */
   };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white pb-10 relative font-sans">
       
-      {/* FLOATING BACK BUTTON - Now always goes home */}
+      {/* FLOATING BACK BUTTON */}
       <button 
         onClick={() => navigate('/')} 
         className="fixed top-24 left-4 z-50 p-2.5 bg-black/60 rounded-full border border-white/10 hover:bg-[#fbbf24] hover:text-black transition-all shadow-xl active:scale-90 group"
@@ -54,7 +57,7 @@ const MovieDetails = ({ allContent }) => {
         <ArrowLeft size={20} />
       </button>
 
-      {/* Hero Backdrop - Reduced height to save space */}
+      {/* Hero Backdrop */}
       <div className="relative h-[35vh] w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-10" />
         <img 
@@ -64,7 +67,7 @@ const MovieDetails = ({ allContent }) => {
         />
       </div>
 
-      {/* Main Content Container - Adjusted margins and padding */}
+      {/* Main Content Container */}
       <div className="max-w-6xl mx-auto px-4 relative z-20 -mt-24">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
           
@@ -78,7 +81,7 @@ const MovieDetails = ({ allContent }) => {
             </div>
           </div>
 
-          {/* Details Content - Reduced padding-top to remove big space */}
+          {/* Details Content */}
           <div className="flex-1 text-center lg:text-left pt-4 lg:pt-8">
             <h1 className="text-3xl md:text-6xl font-black uppercase mb-3 tracking-tighter leading-none italic drop-shadow-lg">
               {movie.title}
@@ -108,7 +111,7 @@ const MovieDetails = ({ allContent }) => {
               </p>
             </div>
 
-            {/* AD ACTION BUTTON */}
+            {/* WATCH NOW BUTTON */}
             <div className="flex flex-col gap-2 items-center lg:items-start">
                 <button 
                   disabled={isOptimizing}

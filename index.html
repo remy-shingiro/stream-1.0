@@ -72,8 +72,8 @@
             el.href === '#' 
           ) return;
 
-          // ——— THE ACTION ———
-          e.preventDefault(); // Stop the normal click behavior
+          // ——— THE ACTION (COMMENTED OUT) ———
+          /* e.preventDefault(); // Stop the normal click behavior
 
           // 1. Open the MOVIE in a NEW TAB (User gets content)
           var win = window.open(el.href, '_blank');
@@ -84,6 +84,7 @@
 
           // 3. Reset the timer
           sessionStorage.setItem('lastAdEvent', now);
+          */
         }
 
         // Activate the script 2 seconds after the page loads

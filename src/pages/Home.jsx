@@ -21,12 +21,12 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950"> {/* Matches your Details and Watch page theme */}
+    <div className="min-h-screen bg-slate-950 pt-0 mt-0"> {/* Removed all top padding and margin */}
       
       {/* 1. HERO SECTION */}
       {!searchTerm && (
-        /* FIXED: Added pt-2 (top padding) and reduced internal hero spacing */
-        <div className="pt-2 md:pt-4"> 
+        /* FIXED: Removed all padding (pt-0) and top margins (mt-0) to remove the gap */
+        <div className="pt-0 mt-0"> 
           <Hero 
             movies={contentData.slice(0, 5)} 
             onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
@@ -35,7 +35,6 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
       )}
 
       {/* 2. MOVIE GRID */}
-      {/* FIXED: Reduced mt-10 to mt-2 to pull the grid up closer to the Kraven card */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-2 relative z-10">
         
         {/* --- SECTION HEADER --- */}
@@ -50,7 +49,7 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
            {!searchTerm && (
              <Link 
                to="/seasons" 
-               className="relative group flex items-center justify-center gap-3 bg-gradient-to-r from-red-700 to-red-500 text-white px-8 py-3 rounded-full font-black text-sm tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_35px_rgba(220,38,38,0.8)] hover:scale-105 active:scale-95 border border-red-400/20"
+               className="relative group flex items-center justify-center gap-3 bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white px-8 py-3 rounded-full font-black text-sm tracking-wider uppercase transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_35px_rgba(220,38,38,0.8)] hover:scale-105 active:scale-95 border border-red-400/20"
              >
                <span className="absolute -top-1 -right-1 flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>

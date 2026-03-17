@@ -60,7 +60,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
   };
 
   return (
-    <nav className="bg-brand-dark/95 border-b border-white/10 sticky top-0 z-50 backdrop-blur-md" ref={searchRef}>
+    <nav className="bg-[#0f0f0f]/95 border-b border-white/10 sticky top-0 z-50 backdrop-blur-md" ref={searchRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20 gap-4">
           
@@ -70,44 +70,21 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
               <span className="text-red-600 font-bold text-xl group-hover:text-red-500 pt-0.5 pl-0.5">▶</span>
             </div>
             <div className="flex flex-col">
-              <span className="text-brand-gold font-bold text-xl leading-none">Agasobanuye</span>
-              <span className="text-white text-xs tracking-widest">FILIME</span>
+              <span className="text-[#fbbf24] font-bold text-xl leading-none uppercase">Agasobanuye</span>
+              <span className="text-white text-xs tracking-widest font-black">FILIME</span>
             </div>
           </a>
 
-          {/* --- DESKTOP NAVIGATION (YELLOW BUTTONS) --- */}
+          {/* --- DESKTOP NAVIGATION --- */}
           <div className="hidden md:flex items-center space-x-4">
-            <a 
-              href="/" 
-              // Changed: bg-brand-gold text-black (Yellow default) -> hover:bg-red-600 hover:text-white
-              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
-            >
-              Ahabanza
-            </a>
-            <a 
-              href="/seasons" 
-              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
-            >
-              Action
-            </a>
-            <a 
-              href="/seasons" 
-              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
-            >
-              Seasons
-            </a>
-            <a 
-              href="/" 
-              className="px-5 py-2 rounded-md bg-brand-gold text-black font-bold text-sm hover:bg-red-600 hover:text-white transition-colors shadow-md"
-            >
-              Film zose
-            </a>
+            <a href="/" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Ahabanza</a>
+            <a href="/seasons" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Action</a>
+            <a href="/seasons" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Seasons</a>
+            <a href="/" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Film zose</a>
           </div>
 
           {/* --- RIGHT SIDE: SEARCH & MENU --- */}
           <div className="flex items-center gap-4 relative">
-            
-            {/* DESKTOP SEARCH INPUT */}
             <div className="relative hidden md:block">
               <input 
                 type="text" 
@@ -116,13 +93,12 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                 placeholder="Shakisha filme..." 
                 className="bg-white text-black pl-3 pr-10 py-2 rounded-sm text-sm focus:outline-none w-40 md:w-48 lg:w-48 lg:focus:w-64 transition-all"
               />
-              <button className="absolute right-0 top-0 h-full px-3 bg-brand-gold text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center pointer-events-none">
+              <button className="absolute right-0 top-0 h-full px-3 bg-[#fbbf24] text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center pointer-events-none">
                   <Search size={16} />
               </button>
 
-              {/* SUGGESTIONS DROPDOWN */}
               {suggestions.length > 0 && (
-                <div className="absolute top-full mt-2 right-0 w-72 bg-brand-dark border border-white/10 rounded-md shadow-2xl overflow-hidden z-50">
+                <div className="absolute top-full mt-2 right-0 w-72 bg-[#0f0f0f] border border-white/10 rounded-md shadow-2xl overflow-hidden z-50">
                   {suggestions.map((movie) => (
                     <div 
                       key={movie.id} 
@@ -131,8 +107,8 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                     >
                       <img src={movie.poster_url || movie.image} alt={movie.title} className="w-10 h-14 object-cover rounded shadow" />
                       <div className="flex flex-col min-w-0">
-                        <span className="text-white text-sm font-medium truncate">{movie.title}</span>
-                        <span className="text-gray-500 text-xs">{movie.type === 'series' ? 'Series' : 'Movie'}</span>
+                        <span className="text-white text-sm font-medium truncate uppercase">{movie.title}</span>
+                        <span className="text-gray-500 text-[10px] font-bold uppercase">{movie.type === 'series' ? 'Series' : 'Movie'}</span>
                       </div>
                     </div>
                   ))}
@@ -140,8 +116,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
               )}
             </div>
 
-            {/* MOBILE ICONS */}
-            <button onClick={toggleSearch} className="md:hidden text-gray-300 hover:text-brand-gold">
+            <button onClick={toggleSearch} className="md:hidden text-gray-300 hover:text-[#fbbf24]">
               <Search size={24} />
             </button>
             <button onClick={toggleMenu} className="md:hidden text-gray-300 hover:text-white">
@@ -151,52 +126,14 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
         </div>
       </div>
 
-      {/* --- MOBILE SEARCH BAR --- */}
-      {isSearchOpen && (
-        <div className="md:hidden bg-brand-dark p-4 border-b border-white/10 relative">
-          <div className="relative flex gap-2">
-             <input 
-              type="text" 
-              autoFocus 
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Shakisha..." 
-              className="flex-1 bg-white text-black px-3 py-2 rounded-sm text-sm focus:outline-none"
-            />
-            <button className="bg-brand-gold text-black px-4 py-2 rounded-sm font-bold flex items-center">
-               <Search size={18} />
-            </button>
-          </div>
-
-          {/* MOBILE SUGGESTIONS */}
-          {suggestions.length > 0 && (
-            <div className="mt-2 bg-[#181818] rounded-md border border-white/10 shadow-xl z-50 relative">
-               {suggestions.map((movie) => (
-                  <div 
-                    key={movie.id} 
-                    onClick={() => handleSuggestionClick(movie)}
-                    className="flex items-center gap-4 p-3 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0"
-                  >
-                    <img src={movie.poster_url || movie.image} alt={movie.title} className="w-12 h-16 object-cover rounded" />
-                    <div className="flex flex-col">
-                      <span className="text-white font-medium text-sm line-clamp-1">{movie.title}</span>
-                      <span className="text-brand-gold text-xs">Reba nonaha</span>
-                    </div>
-                  </div>
-               ))}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* --- MOBILE MENU --- */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-brand-dark border-t border-white/10">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <a href="/" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Ahabanza</a>
-            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Action</a>
-            <a href="/seasons" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Seasons</a>
-            <a href="/" className="block px-3 py-3 rounded-md text-base font-bold text-black bg-brand-gold hover:bg-red-600 hover:text-white mb-2 transition-colors">Film zose</a>
+        <div className="md:hidden bg-[#0f0f0f] border-t border-white/10 animate-in slide-in-from-top">
+          <div className="px-4 pt-2 pb-6 space-y-2">
+            <a href="/" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Ahabanza</a>
+            <a href="/seasons" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Action</a>
+            <a href="/seasons" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Seasons</a>
+            <a href="/" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Film zose</a>
           </div>
         </div>
       )}

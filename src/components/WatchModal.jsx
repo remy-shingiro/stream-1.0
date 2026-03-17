@@ -79,7 +79,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
          />
       </div>
 
-      <div className="w-full max-w-7xl h-full md:h-[90vh] bg-[#121212] md:rounded-xl shadow-2xl flex flex-col overflow-hidden border-none md:border border-white/10 mx-auto md:my-auto">
+      <div className="w-full max-w-7xl h-full md:h-[90vh] bg-slate-950 md:rounded-xl shadow-2xl flex flex-col overflow-hidden border-none md:border border-white/10 mx-auto md:my-auto">
         
         {/* --- HEADER --- */}
         <div className="flex-shrink-0 flex justify-between items-center px-4 py-3 bg-gray-900 border-b border-white/10 z-20">
@@ -87,22 +87,20 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
               <h2 className="text-white text-sm md:text-lg font-bold truncate">
                 {content.title}
               </h2>
-              <span className="text-brand-gold text-[10px] font-bold uppercase tracking-wider">
+              <span className="text-[#fbbf24] text-[10px] font-bold uppercase tracking-wider">
                 {activeTitle}
               </span>
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
             
-            {/* 1. BLUE BUTTON: REBA FILIME (Opens in New Tab) */}
+            {/* 1. BLUE BUTTON: REBA FILIME (Standard link, no flipping) */}
             {activeVideoUrl && (
               <a 
                 href={activeVideoUrl} 
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => !activeVideoUrl && e.preventDefault()}
-                className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg shadow-blue-900/40 border border-blue-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
-                title="Reba muri External Player"
+                className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg border border-blue-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
               >
                   <ExternalLink size={14} strokeWidth={3} />
                   <span className="hidden sm:inline">REBA FILIME</span>
@@ -110,14 +108,13 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
               </a>
             )}
 
-            {/* 2. GREEN BUTTON: DOWNLOAD */}
+            {/* 2. GREEN BUTTON: DOWNLOAD (Standard link, no flipping) */}
             {activeDownloadUrl && (
               <a 
                 href={activeDownloadUrl} 
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => !activeDownloadUrl && e.preventDefault()} 
-                className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg shadow-green-900/40 border border-green-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
+                className="flex items-center justify-center gap-2 flex-shrink-0 min-w-fit bg-green-600 hover:bg-green-500 text-white font-bold uppercase tracking-wide rounded-full shadow-lg border border-green-400/30 transition-transform hover:scale-105 active:scale-95 whitespace-nowrap text-[10px] px-3 py-1.5 sm:text-xs sm:px-4 sm:py-2"
               >
                   <Download size={14} strokeWidth={3} />
                   <span>Download {seoSize ? `(${seoSize})` : ''}</span>
@@ -126,7 +123,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
 
             <button 
               onClick={onClose} 
-              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-600 text-white transition-colors backdrop-blur-md ml-1 flex-shrink-0"
+              className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-red-600 hover:bg-red-700 text-white transition-colors backdrop-blur-md ml-1 flex-shrink-0"
             >
               <X size={20} />
             </button>
@@ -139,7 +136,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
           {/* LEFT: VIDEO PLAYER */}
           <div className="w-full md:flex-1 flex flex-col bg-black md:overflow-y-auto shrink-0">
             <div className="w-full aspect-video md:h-auto md:flex-1 lg:flex-none lg:aspect-video bg-black flex items-center justify-center flex-shrink-0 relative">
-               {activeVideoUrl ? (
+                {activeVideoUrl ? (
                 <iframe 
                   src={activeVideoUrl} 
                   className="w-full h-full" 
@@ -180,7 +177,7 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                        <button 
                          key={eIdx}
                          onClick={() => setCurrentEpisode(ep)}
-                         className={`w-full text-left p-3 rounded text-sm truncate transition-colors mb-1 ${currentEpisode === ep ? 'bg-brand-gold text-black font-bold' : 'bg-[#222] text-gray-300 hover:bg-white/10'}`}
+                         className={`w-full text-left p-3 rounded text-sm truncate transition-colors mb-1 ${currentEpisode === ep ? 'bg-[#fbbf24] text-black font-bold' : 'bg-[#222] text-gray-300 hover:bg-white/10'}`}
                        >
                          <span className="opacity-60 mr-2 text-xs">Ep {ep.episodeNumber || eIdx + 1}</span>{ep.title}
                        </button>
@@ -197,14 +194,14 @@ const WatchModal = ({ content, allContent, onClose, onContentChange, onSearch })
                       <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${currentEpisode === part ? 'bg-black/30 text-white' : 'bg-white/10 text-gray-400'}`}>IGICE {idx + 1}</span>
                       <span className="truncate">{part.title}</span>
                     </button>
-                 ))
+                  ))
                ) : (
                  recommendations.map(rec => (
                    <div key={rec.id} onClick={() => onContentChange && onContentChange(rec)} className="flex gap-3 p-2 hover:bg-white/10 rounded cursor-pointer transition-colors bg-[#222] md:bg-transparent">
                      <img src={rec.poster_url || rec.image} className="w-16 h-24 object-cover rounded shadow-md flex-shrink-0" alt={rec.title} />
                      <div className="flex flex-col justify-center min-w-0">
                        <p className="text-gray-200 text-sm font-medium line-clamp-2 leading-snug">{rec.title}</p>
-                       <p className="text-xs text-brand-gold mt-1">REBA NIYI ▶</p>
+                       <p className="text-xs text-[#fbbf24] mt-1 uppercase font-black">REBA NIYI ▶</p>
                      </div>
                    </div>
                  ))

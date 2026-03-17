@@ -9,7 +9,6 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SkeletonLoader from './components/SkeletonLoader';
 import ProtectedRoute from './components/ProtectedRoute';
-// IMPORT THE NEW COMPONENT HERE
 import FloatingDonation from './components/FloatingDonation';
 
 // 2. DYNAMIC IMPORTS
@@ -40,16 +39,20 @@ const AppContent = ({
 }) => {
   const navigate = useNavigate();
 
+  // --- CLEAN NAVIGATION (NO TAB FLIPPING) ---
   const handleNavigation = (movie) => {
+    // Ensure all ad-related side effects are removed
     setSelectedContent(null);
+    setSearchTerm(""); // Reset search on nav
+    
+    // Direct internal navigation only
     navigate(`/movie/${movie.id}`);
   };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] font-sans relative">
+    <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden">
       <Toaster position="bottom-right" reverseOrder={false} />
       
-      {/* GLOBAL DONATION BUTTON - Visible on every page */}
       <FloatingDonation />
 
       <Navbar 
@@ -58,7 +61,7 @@ const AppContent = ({
           onItemClick={handleNavigation} 
       />
 
-      <div className={selectedContent ? "hidden" : "block"}>
+      <div className={selectedContent ? "hidden" : "block pt-0 mt-0"}>
         <Suspense fallback={<SkeletonLoader />}>
           <Routes>
             <Route 
@@ -99,7 +102,7 @@ const AppContent = ({
       </div>
 
       {selectedContent && (
-         <Suspense fallback={<div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-white">Loading Player...</div>}>
+         <Suspense fallback={<div className="fixed inset-0 z-50 bg-black flex items-center justify-center text-white font-black uppercase text-xs tracking-widest">Loading Player...</div>}>
             <WatchModal 
               content={selectedContent}
               allContent={allContent} 
