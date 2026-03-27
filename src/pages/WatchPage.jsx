@@ -4,6 +4,7 @@ import {
   ArrowLeft, Share2, Info, Play, MessageSquare, 
   AlertTriangle, ChevronDown, ChevronUp, Zap, Download 
 } from 'lucide-react';
+import CommentSection from '../components/CommentSection';
 
 const WatchPage = ({ allMovies }) => {
   const { id } = useParams();
@@ -32,43 +33,15 @@ const WatchPage = ({ allMovies }) => {
 
   // --- THE TAB FLIP LOGIC (DISABLED/COMMENTED OUT) ---
   const handleActionTrigger = (targetUrl) => {
-    // const adUrl = "https://omg10.com/4/10484905"; 
-
     if (!targetUrl) return;
 
     // 1. Open the Content/Download in a NEW tab directly without flipping current tab
     window.open(targetUrl, '_blank');
-
-    /* // Commented out to stop tab flipping
-    const newWindow = window.open(targetUrl, '_blank');
-    if (newWindow) {
-      newWindow.focus();
-      setTimeout(() => {
-        window.location.assign(adUrl);
-      }, 300);
-    } else {
-      window.location.href = targetUrl;
-    }
-    */
   };
 
   const handleEpisodeSwitch = (index) => {
     // Navigate directly to the selected episode
     navigate(`/watch/${id}?ep=${index}`);
-
-    /* // Commented out to stop tab flipping on episode switch
-    const nextEpisodeUrl = `${window.location.origin}/watch/${id}?ep=${index}`;
-    const adUrl = "https://omg10.com/4/10484905";
-    const newWindow = window.open(nextEpisodeUrl, '_blank');
-    if (newWindow) {
-      newWindow.focus();
-      setTimeout(() => {
-        window.location.assign(adUrl);
-      }, 300);
-    } else {
-      navigate(`/watch/${id}?ep=${index}`);
-    }
-    */
   };
 
   if (!movie) return (
@@ -115,7 +88,7 @@ const WatchPage = ({ allMovies }) => {
 
       <div className="max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-0 lg:gap-8 lg:p-6 relative z-10">
         
-        {/* 2. PLAYER SECTION */}
+        {/* 2. PLAYER SECTION (LEFT COLUMN) */}
         <div className="flex-1">
           <div className="relative w-full aspect-video bg-black shadow-2xl lg:rounded-3xl overflow-hidden border border-white/10 group">
             <iframe
@@ -156,9 +129,15 @@ const WatchPage = ({ allMovies }) => {
               </div>
             </div>
           </div>
+
+          {/* --- ADDED COMMENT SECTION HERE --- */}
+          <div className="px-5 lg:px-2 pb-12">
+            <CommentSection movieId={movie.id} />
+          </div>
+
         </div>
 
-        {/* 3. DYNAMIC SIDEBAR: Series Episodes OR Movie Suggestions */}
+        {/* 3. DYNAMIC SIDEBAR: Series Episodes OR Movie Suggestions (RIGHT COLUMN) */}
         <div className="w-full lg:w-[420px] p-5 lg:p-0">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1.5 h-6 bg-[#fbbf24] rounded-full shadow-[0_0_10px_#fbbf24]"></div>

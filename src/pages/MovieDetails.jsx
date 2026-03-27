@@ -90,7 +90,7 @@ const MovieDetails = ({ allContent }) => {
             {movie.interpreter_name && (
               <div className="inline-flex items-center gap-2 bg-[#fbbf24] text-black font-black px-3 py-1 rounded-md mb-4 text-[10px] uppercase shadow-lg shadow-yellow-500/20">
                 <Zap size={12} fill="black" />
-                Basobanuye na: {movie.interpreter_name}
+                Yasobanuwe na: {movie.interpreter_name}
               </div>
             )}
 
@@ -126,7 +126,7 @@ const MovieDetails = ({ allContent }) => {
                 ) : (
                     <>
                         <Play fill="white" size={24} />
-                        REBA FILIME YOSE
+                        KANDA UREBA FILIME YOSE
                     </>
                 )}
                 </button>
