@@ -8,10 +8,12 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
   const [suggestions, setSuggestions] = useState([]);
   const searchRef = useRef(null);
 
-  // 1. PERFORMANCE: Debounce Search
+  // PERFORMANCE: Debounce Search (Auto-search while typing)
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (onSearch) onSearch(searchQuery);
+      if (onSearch && searchQuery.trim() !== '') {
+        onSearch(searchQuery);
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery, onSearch]);
@@ -21,6 +23,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setSuggestions([]);
+        setIsSearchOpen(false); 
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -31,7 +34,6 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
     const query = e.target.value;
     setSearchQuery(query); 
     
-    // Suggestions logic
     if (query.trim().length > 1 && data.length > 0) {
       const matches = data
         .filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
@@ -39,6 +41,21 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
       setSuggestions(matches);
     } else {
       setSuggestions([]);
+    }
+  };
+
+  // NEW: Handle clicking the search icon or pressing Enter
+  const handleManualSearch = () => {
+    if (onSearch && searchQuery.trim() !== '') {
+      onSearch(searchQuery);
+      setSuggestions([]); // Clear dropdown after searching
+      setIsSearchOpen(false); // Close mobile search bar
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleManualSearch();
     }
   };
 
@@ -83,20 +100,27 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             <a href="/" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Film zose</a>
           </div>
 
-          {/* --- RIGHT SIDE: SEARCH & MENU --- */}
+          {/* --- RIGHT SIDE: DESKTOP SEARCH & MOBILE TOGGLES --- */}
           <div className="flex items-center gap-4 relative">
+            
+            {/* Desktop Search Bar */}
             <div className="relative hidden md:block">
               <input 
                 type="text" 
                 value={searchQuery}
                 onChange={handleSearchChange}
+                onKeyDown={handleKeyDown}
                 placeholder="Shakisha filme..." 
                 className="bg-white text-black pl-3 pr-10 py-2 rounded-sm text-sm focus:outline-none w-40 md:w-48 lg:w-48 lg:focus:w-64 transition-all"
               />
-              <button className="absolute right-0 top-0 h-full px-3 bg-[#fbbf24] text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center pointer-events-none">
+              <button 
+                onClick={handleManualSearch}
+                className="absolute right-0 top-0 h-full px-3 bg-[#fbbf24] text-black rounded-r-sm hover:bg-yellow-500 flex items-center justify-center cursor-pointer transition-colors"
+              >
                   <Search size={16} />
               </button>
 
+              {/* Desktop Suggestions */}
               {suggestions.length > 0 && (
                 <div className="absolute top-full mt-2 right-0 w-72 bg-[#0f0f0f] border border-white/10 rounded-md shadow-2xl overflow-hidden z-50">
                   {suggestions.map((movie) => (
@@ -116,9 +140,12 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
               )}
             </div>
 
+            {/* Mobile Search Toggle */}
             <button onClick={toggleSearch} className="md:hidden text-gray-300 hover:text-[#fbbf24]">
-              <Search size={24} />
+              {isSearchOpen ? <X size={24} /> : <Search size={24} />}
             </button>
+            
+            {/* Mobile Menu Toggle */}
             <button onClick={toggleMenu} className="md:hidden text-gray-300 hover:text-white">
               {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -126,14 +153,56 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
         </div>
       </div>
 
+      {/* --- MOBILE SEARCH BAR EXPANSION --- */}
+      {isSearchOpen && (
+        <div className="md:hidden bg-[#1a1a1a] border-t border-white/10 p-4 absolute w-full z-50 shadow-2xl">
+          <div className="relative w-full">
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Shakisha filme..." 
+              autoFocus
+              className="w-full bg-white text-black pl-4 pr-12 py-3 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#fbbf24] transition-all"
+            />
+            <button 
+              onClick={handleManualSearch}
+              className="absolute right-0 top-0 h-full px-4 bg-[#fbbf24] text-black rounded-r-md flex items-center justify-center hover:bg-yellow-500 cursor-pointer transition-colors"
+            >
+                <Search size={18} />
+            </button>
+          </div>
+
+          {/* Mobile Search Suggestions */}
+          {suggestions.length > 0 && (
+            <div className="mt-2 w-full bg-[#0f0f0f] border border-white/10 rounded-md shadow-2xl overflow-hidden">
+              {suggestions.map((movie) => (
+                <div 
+                  key={movie.id} 
+                  onClick={() => handleSuggestionClick(movie)}
+                  className="flex items-center gap-3 p-3 hover:bg-white/10 cursor-pointer transition-colors border-b border-white/5 last:border-0"
+                >
+                  <img src={movie.poster_url || movie.image} alt={movie.title} className="w-10 h-14 object-cover rounded shadow" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-white text-sm font-medium truncate uppercase">{movie.title}</span>
+                    <span className="text-gray-500 text-[10px] font-bold uppercase">{movie.type === 'series' ? 'Series' : 'Movie'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* --- MOBILE MENU --- */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-[#0f0f0f] border-t border-white/10 animate-in slide-in-from-top">
-          <div className="px-4 pt-2 pb-6 space-y-2">
-            <a href="/" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Ahabanza</a>
-            <a href="/seasons" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Action</a>
-            <a href="/seasons" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Seasons</a>
-            <a href="/" className="block px-3 py-4 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase">Film zose</a>
+        <div className="md:hidden bg-[#0f0f0f] border-t border-white/10 animate-in slide-in-from-top absolute w-full z-40 shadow-2xl">
+          <div className="px-4 pt-4 pb-6 space-y-3">
+            <a href="/" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Ahabanza</a>
+            <a href="/seasons" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Action</a>
+            <a href="/seasons" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Seasons</a>
+            <a href="/" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Film zose</a>
           </div>
         </div>
       )}
