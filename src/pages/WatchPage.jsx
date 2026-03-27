@@ -53,8 +53,8 @@ const WatchPage = ({ allMovies }) => {
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans relative">
       
-      {/* Background Hero Blur - Matching MovieDetails theme */}
-      <div className="absolute inset-0 h-[45vh] w-full overflow-hidden z-0">
+      {/* Background Hero Blur (Added pointer-events-none so it doesn't block clicks) */}
+      <div className="absolute top-0 left-0 right-0 h-[45vh] w-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent z-10" />
         <img 
           src={movie.poster_url || movie.image} 
@@ -63,8 +63,8 @@ const WatchPage = ({ allMovies }) => {
         />
       </div>
 
-      {/* 1. TOP NAV BAR */}
-      <div className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
+      {/* 1. SECONDARY INFO BAR (Changed to relative z-30 so it respects your global Navbar) */}
+      <div className="relative z-30 bg-slate-950/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-[1800px] mx-auto px-4 h-16 flex items-center justify-between">
           <button 
             onClick={() => navigate('/')} 
@@ -130,7 +130,7 @@ const WatchPage = ({ allMovies }) => {
             </div>
           </div>
 
-          {/* --- ADDED COMMENT SECTION HERE --- */}
+          {/* --- COMMENT SECTION HERE --- */}
           <div className="px-5 lg:px-2 pb-12">
             <CommentSection movieId={movie.id} />
           </div>
