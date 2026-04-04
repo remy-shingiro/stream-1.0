@@ -41,8 +41,9 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
       {/* 1. HERO SECTION */}
       {!searchTerm && (
         <div className="pt-0 mt-0 relative z-0"> 
+          {/* 🚀 RANDOMIZATION FIX: Pass ALL contentData, not just the first 5! */}
           <Hero 
-            movies={contentData.slice(0, 5)} 
+            movies={contentData} 
             onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
           />
         </div>
