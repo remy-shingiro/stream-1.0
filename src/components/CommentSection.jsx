@@ -86,7 +86,7 @@ const CommentSection = ({ movieId }) => {
       <form onSubmit={handleSubmit} className="mb-8 flex flex-col gap-3">
         <input 
           type="text" 
-          placeholder="Amazina - Names" 
+          placeholder="Amazina yawe- Names" 
           value={name}
           onChange={(e) => setName(e.target.value)}
           required

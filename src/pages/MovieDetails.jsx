@@ -116,7 +116,7 @@ const MovieDetails = ({ allContent }) => {
                 <button 
                   disabled={isOptimizing}
                   onClick={handleRevenueTrigger}
-                  className={`group relative flex items-center justify-center gap-3 ${isOptimizing ? 'bg-slate-800 text-slate-500 shadow-none' : 'bg-gradient-to-r from-red-700 to-red-600 hover:from-red-600 hover:to-red-500 text-white'} w-full lg:w-max px-12 py-5 rounded-xl font-black text-xl transition-all shadow-[0_15px_40px_rgba(220,38,38,0.3)] hover:-translate-y-1 active:scale-95 border border-white/10`}
+                  className={`group relative flex items-center justify-center gap-3 ${isOptimizing ? 'bg-slate-800 text-slate-500 shadow-none' : 'bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-green-600 hover:to-green-400 text-white'} w-full lg:w-max px-12 py-5 rounded-xl font-black text-xl transition-all shadow-[0_15px_40px_rgba(220,38,38,0.3)] hover:-translate-y-1 active:scale-95 border border-white/10`}
                 >
                 {isOptimizing ? (
                     <span className="flex items-center gap-2">
@@ -126,7 +126,7 @@ const MovieDetails = ({ allContent }) => {
                 ) : (
                     <>
                         <Play fill="white" size={24} />
-                        KANDA UREBA FILIME YOSE
+                        DOWNLOAD-WATCH FILIME YOSE
                     </>
                 )}
                 </button>
