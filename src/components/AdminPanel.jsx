@@ -24,7 +24,7 @@ const AdminPanel = ({ movies }) => {
   // State for adding new episodes (Now includes downloadLink)
   const [newEpisodeInput, setNewEpisodeInput] = useState({}); 
 
-  // --- FILTERING LOGIC ---
+  // --- FILTERING LOGIC (Already perfectly written by you!) ---
   const filteredContent = useMemo(() => {
     return movies.filter(item => {
       const matchesTab = activeTab === 'all' ? true : item.type === activeTab;
@@ -321,29 +321,75 @@ const AdminPanel = ({ movies }) => {
 
           {/* --- RIGHT: LIST --- */}
           <div className="lg:col-span-7">
-            <div className="flex gap-2 mb-4">
-               {['all', 'movie', 'series', 'collection'].map(tab => (
-                 <button key={tab} onClick={() => setActiveTab(tab)} className={`px-4 py-2 rounded-full text-xs font-bold capitalize ${activeTab === tab ? 'bg-white text-black' : 'bg-[#1a1a1a] text-gray-400'}`}>{tab}</button>
-               ))}
+            
+            {/* 🚀 NEW: SEARCH AND TABS HEADER */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-start sm:items-center bg-[#1a1a1a] p-3 rounded-lg border border-gray-800">
+               {/* Tabs */}
+               <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+                  {['all', 'movie', 'series', 'collection'].map(tab => (
+                    <button 
+                      key={tab} 
+                      onClick={() => setActiveTab(tab)} 
+                      className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold capitalize transition-colors ${activeTab === tab ? 'bg-white text-black shadow-md' : 'bg-black text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500'}`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+               </div>
+
+               {/* Search Input */}
+               <div className="relative w-full sm:w-64">
+                 <input 
+                   type="text" 
+                   placeholder="Search content..." 
+                   value={searchTerm}
+                   onChange={(e) => setSearchTerm(e.target.value)}
+                   className="w-full bg-black border border-gray-700 rounded-full py-2 pl-4 pr-8 text-sm text-white focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-all placeholder-gray-600"
+                 />
+                 {searchTerm && (
+                   <button 
+                     onClick={() => setSearchTerm('')}
+                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white font-bold text-lg leading-none pb-1"
+                   >
+                     &times;
+                   </button>
+                 )}
+               </div>
             </div>
 
+            {/* LIST ITEMS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredContent.map((item) => (
-                <div key={item.id} className="flex gap-3 bg-[#1a1a1a] p-3 rounded-lg border border-gray-800 hover:border-gray-600">
-                  <img src={item.poster_url || '/placeholder.jpg'} className="w-14 h-20 object-cover rounded" alt="" />
-                  <div className="flex-1 overflow-hidden">
-                    <div className="flex justify-between">
-                       <h4 className="font-bold text-sm truncate">{item.title}</h4>
-                       <span className="text-[10px] bg-gray-800 px-1 rounded uppercase">{item.type}</span>
+                <div key={item.id} className="flex gap-3 bg-[#1a1a1a] p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors">
+                  <img src={item.poster_url || '/placeholder.jpg'} className="w-14 h-20 object-cover rounded shadow-md" alt="" />
+                  <div className="flex-1 overflow-hidden flex flex-col justify-between">
+                    <div>
+                       <div className="flex justify-between items-start">
+                          <h4 className="font-bold text-sm truncate pr-2" title={item.title}>{item.title}</h4>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0 ${
+                             item.type === 'movie' ? 'bg-blue-900/40 text-blue-400' : 
+                             item.type === 'series' ? 'bg-purple-900/40 text-purple-400' : 
+                             'bg-green-900/40 text-green-400'
+                          }`}>
+                            {item.type}
+                          </span>
+                       </div>
+                       <p className="text-xs text-gray-500 truncate mt-1">{item.interpreter_name || 'No Interpreter'}</p>
                     </div>
-                    <p className="text-xs text-gray-500 truncate">{item.interpreter_name}</p>
                     <div className="mt-2 flex gap-2">
-                       <button onClick={() => handleEdit(item)} className="text-[10px] bg-white text-black px-2 py-1 rounded font-bold">EDIT</button>
-                       <button onClick={() => handleDelete(item)} className="text-[10px] bg-red-900/30 text-red-500 px-2 py-1 rounded font-bold">DELETE</button>
+                       <button onClick={() => handleEdit(item)} className="text-[10px] bg-white hover:bg-gray-200 text-black px-3 py-1.5 rounded font-bold transition-colors">EDIT</button>
+                       <button onClick={() => handleDelete(item)} className="text-[10px] bg-red-900/20 hover:bg-red-900/40 text-red-500 px-3 py-1.5 rounded font-bold transition-colors">DELETE</button>
                     </div>
                   </div>
                 </div>
               ))}
+              
+              {/* Empty State if search finds nothing */}
+              {filteredContent.length === 0 && (
+                <div className="col-span-full py-12 text-center text-gray-500 border border-dashed border-gray-800 rounded-lg">
+                  <p>No content matches your search.</p>
+                </div>
+              )}
             </div>
           </div>
 
