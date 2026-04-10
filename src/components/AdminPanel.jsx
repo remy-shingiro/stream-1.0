@@ -5,6 +5,19 @@ import toast from 'react-hot-toast';
 // --- CONFIGURATION ---
 const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_PRESET;
+// ADD YOUR CLOUDFLARE/NETLIFY WEBHOOK HERE:
+const BUILD_WEBHOOK_URL = import.meta.env.VITE_BUILD_WEBHOOK_URL || ''; 
+
+// --- HELPER: SEO URL GENERATOR ---
+const generateSlug = (text) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')        // Replace spaces with -
+    .replace(/[^\w\-]+/g, '')    // Remove all non-word chars
+    .replace(/\-\-+/g, '-');     // Replace multiple - with single -
+};
 
 const AdminPanel = ({ movies }) => {
   const [isSaving, setIsSaving] = useState(false);
@@ -21,10 +34,10 @@ const AdminPanel = ({ movies }) => {
   };
   const [formData, setFormData] = useState(initialForm);
 
-  // State for adding new episodes (Now includes downloadLink)
+  // State for adding new episodes
   const [newEpisodeInput, setNewEpisodeInput] = useState({}); 
 
-  // --- FILTERING LOGIC (Already perfectly written by you!) ---
+  // --- FILTERING LOGIC ---
   const filteredContent = useMemo(() => {
     return movies.filter(item => {
       const matchesTab = activeTab === 'all' ? true : item.type === activeTab;
@@ -106,7 +119,6 @@ const AdminPanel = ({ movies }) => {
       return { ...prev, seasons: updatedSeasons };
     });
 
-    // Clear input
     setNewEpisodeInput(prev => ({ ...prev, [seasonIndex]: { title: '', link: '', downloadLink: '' } }));
   };
 
@@ -123,7 +135,6 @@ const AdminPanel = ({ movies }) => {
     e.preventDefault();
     if (!formData.title) return toast.error("Title is required!");
 
-    // Validation for Series OR Collection
     if ((formData.type === 'series' || formData.type === 'collection') && formData.seasons.length === 0) {
       return toast.error(formData.type === 'collection' ? "Collection must have at least one part!" : "Series must have at least one season!");
     }
@@ -131,12 +142,14 @@ const AdminPanel = ({ movies }) => {
     setIsSaving(true);
     const loadingToast = toast.loading("Saving changes to GitHub...");
 
+    // 🚀 SEO UPGRADE: Create a clean slug from the title if it's a new movie
+    const newId = generateSlug(formData.title);
+
     const itemToSave = {
       ...formData,
-      id: editingId || Date.now().toString(),
+      id: editingId || newId,
       video_url: formData.type === 'movie' ? formData.video_url : null,
       download_url: formData.type === 'movie' ? formData.download_url : null,
-      // Both Series and Collections use the seasons array
       seasons: (formData.type === 'series' || formData.type === 'collection') ? formData.seasons : []
     };
 
@@ -146,6 +159,14 @@ const AdminPanel = ({ movies }) => {
 
     if (success) {
       toast.success(editingId ? "Updated Successfully!" : "Added Successfully!");
+      
+      // 🚀 WEBHOOK UPGRADE: Trigger the host to rebuild the sitemap automatically
+      if (BUILD_WEBHOOK_URL) {
+        fetch(BUILD_WEBHOOK_URL, { method: 'POST' })
+          .then(() => console.log("Rebuild webhook triggered!"))
+          .catch(err => console.error("Webhook failed", err));
+      }
+
       if (!editingId) setFormData(initialForm);
       setEditingId(null);
       setTimeout(() => window.location.reload(), 1500); 
@@ -168,8 +189,15 @@ const AdminPanel = ({ movies }) => {
     const loadingToast = toast.loading("Deleting content...");
     const success = await deleteContent(item);
     toast.dismiss(loadingToast);
+    
     if (success) {
       toast.success("Deleted Successfully");
+
+      // 🚀 WEBHOOK UPGRADE: Rebuild after deletion so the movie is removed from Google
+      if (BUILD_WEBHOOK_URL) {
+        fetch(BUILD_WEBHOOK_URL, { method: 'POST' }).catch(err => console.error(err));
+      }
+
       setTimeout(() => window.location.reload(), 1500);
     } else {
       toast.error("Delete failed.");
@@ -198,13 +226,11 @@ const AdminPanel = ({ movies }) => {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* 1. UPDATED TYPE TOGGLE (Movie / Series / Collection) */}
                 <div className="flex bg-black p-1 rounded-lg border border-gray-700">
                   {['movie', 'series', 'collection'].map(type => (
                     <button
                       key={type} type="button"
                       onClick={() => {
-                         // If switching to collection, ensure we have a container for the movies
                          const newSeasons = type === 'collection' && formData.seasons.length === 0 
                             ? [{ seasonNumber: 1, episodes: [] }] 
                             : formData.seasons;
@@ -237,14 +263,12 @@ const AdminPanel = ({ movies }) => {
                     <input value={formData.download_url || ''} onChange={e => setFormData({...formData, download_url: e.target.value})} placeholder="Movie Download URL" className="w-full bg-black border border-gray-700 rounded p-3 text-sm focus:border-red-600 outline-none" />
                   </>
                 ) : (
-                  // --- SERIES & COLLECTION BUILDER UI ---
                   <div className="space-y-4 border-t border-gray-700 pt-4">
                       <div className="flex justify-between items-center">
                          <label className="text-sm font-bold text-gray-300">
                            {formData.type === 'collection' ? 'Movies in this Collection' : 'Seasons & Episodes'}
                          </label>
                          
-                         {/* Hide Add Season button for Collections */}
                          {formData.type !== 'collection' && (
                            <button type="button" onClick={addSeason} className="text-xs bg-red-600 px-2 py-1 rounded text-white hover:bg-red-700">+ Add Season</button>
                          )}
@@ -252,7 +276,6 @@ const AdminPanel = ({ movies }) => {
                       
                       {formData.seasons.map((season, sIndex) => (
                         <div key={sIndex} className="bg-black/50 p-3 rounded border border-gray-700">
-                           {/* Hide Season Header for Collections */}
                            {formData.type !== 'collection' && (
                              <div className="flex justify-between items-center mb-2">
                                 <h4 className="text-xs font-bold text-white">Season {season.seasonNumber}</h4>
@@ -260,7 +283,6 @@ const AdminPanel = ({ movies }) => {
                              </div>
                            )}
 
-                           {/* Existing List */}
                            <ul className="space-y-1 mb-3">
                               {season.episodes.map((ep, epIndex) => (
                                 <li key={epIndex} className="flex flex-col gap-1 text-xs text-gray-400 bg-gray-900 p-2 rounded relative">
@@ -276,7 +298,6 @@ const AdminPanel = ({ movies }) => {
                               ))}
                            </ul>
 
-                           {/* Add New Item Inputs */}
                            <div className="flex flex-col gap-2">
                               <input 
                                 placeholder={formData.type === 'collection' ? "Movie Title (e.g. John Wick 2)" : "Episode Title"}
@@ -322,9 +343,7 @@ const AdminPanel = ({ movies }) => {
           {/* --- RIGHT: LIST --- */}
           <div className="lg:col-span-7">
             
-            {/* 🚀 NEW: SEARCH AND TABS HEADER */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-between items-start sm:items-center bg-[#1a1a1a] p-3 rounded-lg border border-gray-800">
-               {/* Tabs */}
                <div className="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
                   {['all', 'movie', 'series', 'collection'].map(tab => (
                     <button 
@@ -337,7 +356,6 @@ const AdminPanel = ({ movies }) => {
                   ))}
                </div>
 
-               {/* Search Input */}
                <div className="relative w-full sm:w-64">
                  <input 
                    type="text" 
@@ -357,7 +375,6 @@ const AdminPanel = ({ movies }) => {
                </div>
             </div>
 
-            {/* LIST ITEMS */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredContent.map((item) => (
                 <div key={item.id} className="flex gap-3 bg-[#1a1a1a] p-3 rounded-lg border border-gray-800 hover:border-gray-600 transition-colors">
@@ -384,7 +401,6 @@ const AdminPanel = ({ movies }) => {
                 </div>
               ))}
               
-              {/* Empty State if search finds nothing */}
               {filteredContent.length === 0 && (
                 <div className="col-span-full py-12 text-center text-gray-500 border border-dashed border-gray-800 rounded-lg">
                   <p>No content matches your search.</p>
