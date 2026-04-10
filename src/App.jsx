@@ -10,10 +10,11 @@ import Footer from './components/Footer';
 import SkeletonLoader from './components/SkeletonLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 import FloatingDonation from './components/FloatingDonation';
+// 🚀 NEW: Import the SupportUs component here
+import SupportUs from './components/SupportUs'; 
 
 // 2. DYNAMIC IMPORTS
 const Home = lazy(() => import('./pages/Home'));
-// 🚀 FIX 1: Import the new Seasons page we created!
 const Seasons = lazy(() => import('./pages/Seasons')); 
 const WatchPage = lazy(() => import('./pages/WatchPage'));
 const MovieDetails = lazy(() => import('./pages/MovieDetails')); 
@@ -50,6 +51,10 @@ const AppContent = ({
 
   return (
     <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden">
+      
+      {/* 🚀 NEW: The Donation Banner & Smart Ad-Popup is mounted at the very top */}
+      <SupportUs />
+
       <Toaster position="bottom-right" reverseOrder={false} />
       
       <FloatingDonation />
@@ -74,12 +79,10 @@ const AppContent = ({
               } 
             />
             
-            {/* 🚀 FIX 2: Point the /seasons route to the actual Seasons component! */}
             <Route 
               path="/seasons" 
               element={
                 <Seasons 
-                  // We pass allContent because the Seasons component filters it automatically
                   contentData={allContent} 
                   searchTerm={searchTerm} 
                 />

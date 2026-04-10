@@ -44,12 +44,11 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
     }
   };
 
-  // NEW: Handle clicking the search icon or pressing Enter
   const handleManualSearch = () => {
     if (onSearch && searchQuery.trim() !== '') {
       onSearch(searchQuery);
-      setSuggestions([]); // Clear dropdown after searching
-      setIsSearchOpen(false); // Close mobile search bar
+      setSuggestions([]); 
+      setIsSearchOpen(false); 
     }
   };
 
@@ -98,6 +97,14 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             <a href="/seasons" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Action</a>
             <a href="/seasons" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Seasons</a>
             <a href="/" className="px-5 py-2 rounded-md bg-[#fbbf24] text-black font-black text-[10px] uppercase hover:bg-red-600 hover:text-white transition-colors shadow-md">Film zose</a>
+            
+            {/* 🚀 NEW: Desktop Donate Button */}
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent('openDonationModal'))}
+              className="px-5 py-2 rounded-md bg-red-600 text-white font-black text-[10px] uppercase hover:bg-red-500 transition-colors shadow-[0_0_10px_rgba(220,38,38,0.5)] border border-red-500"
+            >
+              Donate ❤️
+            </button>
           </div>
 
           {/* --- RIGHT SIDE: DESKTOP SEARCH & MOBILE TOGGLES --- */}
@@ -203,6 +210,17 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             <a href="/seasons" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Action</a>
             <a href="/seasons" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Seasons</a>
             <a href="/" className="block px-4 py-3 rounded-md text-sm font-black text-black bg-[#fbbf24] hover:bg-red-600 hover:text-white transition-colors uppercase text-center">Film zose</a>
+            
+            {/* 🚀 NEW: Mobile Donate Button */}
+            <button 
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('openDonationModal'));
+                setIsMobileMenuOpen(false); // Auto-close menu when clicked
+              }}
+              className="block w-full px-4 py-3 rounded-md text-sm font-black text-white bg-red-600 hover:bg-red-500 transition-colors uppercase text-center shadow-[0_0_10px_rgba(220,38,38,0.5)] border border-red-500"
+            >
+              Donate ❤️
+            </button>
           </div>
         </div>
       )}
