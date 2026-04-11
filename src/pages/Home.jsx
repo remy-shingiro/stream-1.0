@@ -1,11 +1,13 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom'; 
-import { Layers, ChevronRight, MonitorPlay } from 'lucide-react'; 
+import { Layers, ChevronRight, MonitorPlay, Plus } from 'lucide-react'; 
 import Hero from '../components/Hero';
 import MovieCard from '../components/MovieCard';
 import useStructuredData from '../hooks/useStructuredData';
 
 const Home = ({ contentData, onMovieClick, searchTerm }) => {
+  // 🚀 SPEED OPTIMIZATION 3: Control how many DOM nodes render at once!
+  const [visibleCount, setVisibleCount] = useState(20);
 
   // SEO: Remains intact for rich search results
   useStructuredData({
@@ -17,10 +19,7 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
   
   if (!contentData) return null;
 
-  // =========================================
   // SPEED OPTIMIZATION 1: useMemo for Filtering
-  // Prevents recalculating these arrays on every tiny re-render
-  // =========================================
   const { filteredContent, seriesData, moviesData } = useMemo(() => {
     const searchLower = searchTerm?.toLowerCase() || '';
     const filtered = contentData.filter((item) =>
@@ -34,6 +33,8 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
     };
   }, [contentData, searchTerm]);
 
+  // Determine what list we are currently displaying
+  const currentDisplayList = searchTerm ? filteredContent : moviesData;
 
   return (
     <div className="min-h-screen bg-slate-950 pt-0 mt-0 overflow-x-hidden">
@@ -41,19 +42,18 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
       {/* 1. HERO SECTION */}
       {!searchTerm && (
         <div className="pt-0 mt-0 relative z-0"> 
-          {/* 🚀 RANDOMIZATION FIX: Pass ALL contentData, not just the first 5! */}
           <Hero 
-            movies={contentData} 
+            movies={contentData.slice(0, 5)} // 🚀 Pass only top 5 to Hero so it doesn't process 300 items!
             onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
           />
         </div>
       )}
 
-      {/* Main Content Wrapper - Note the relative z-10 so it sits above Hero gradients */}
+      {/* Main Content Wrapper */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 mt-8 relative z-10 space-y-12">
         
         {/* =========================================
-            2. TRENDING SERIES ROW (With Netflix Bleed)
+            2. TRENDING SERIES ROW
             ========================================= */}
         {(!searchTerm && seriesData.length > 0) && (
           <section>
@@ -77,35 +77,23 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
                </Link>
             </div>
 
-            {/* SPEED OPTIMIZATION 2: will-change-scroll
-                UX FIX: Bleed layout (-mx-4 px-4) + Scroll Padding (scroll-pl-4)
-                so the hover states aren't chopped and snapping aligns perfectly.
-            */}
             <div 
               className="flex overflow-x-auto gap-4 py-6 snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 scroll-pl-4 sm:scroll-pl-6 lg:scroll-pl-8"
-              style={{ 
-                scrollbarWidth: 'none', 
-                msOverflowStyle: 'none',
-                willChange: 'scroll-position' 
-              }}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', willChange: 'scroll-position' }}
             >
-              <style>{`
-                div::-webkit-scrollbar { display: none; }
-              `}</style>
+              <style>{`div::-webkit-scrollbar { display: none; }`}</style>
               
               {/* Only slice what we need to render initially for the row */}
-              {seriesData.slice(0, 30).map((item, index) => (
+              {seriesData.slice(0, 15).map((item, index) => (
                 <Link 
                   key={item.id} 
                   to={`/movie/${item.id}`} 
-                  // Set explicit width to prevent layout shift (CLS) while images load
                   className="block w-[160px] md:w-[192px] lg:w-[224px] shrink-0 snap-start group"
                 >
                   <MovieCard movie={item} index={index} />
                 </Link>
               ))}
               
-              {/* UX FIX: Spacer width exactly matches screen padding so the last card isn't cut off */}
               <div className="w-4 shrink-0 sm:w-6 lg:w-8" aria-hidden="true"></div>
             </div>
           </section>
@@ -124,24 +112,36 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
           </div>
 
           {filteredContent.length > 0 ? (
-            /* SPEED OPTIMIZATION 3: content-visibility
-               Tells the browser NOT to render the heavy styling of cards that are off-screen.
-            */
-            <div 
-              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8"
-              style={{ contentVisibility: 'auto' }}
-            >
-              {(searchTerm ? filteredContent : moviesData).map((item, index) => (
-                <Link 
-                  key={item.id} 
-                  to={`/movie/${item.id}`} 
-                  className="block w-full group"
-                >
-                  {/* Assuming MovieCard has lazy loading built-in for the images! */}
-                  <MovieCard movie={item} index={index} />
-                </Link>
-              ))}
-            </div>
+            <>
+              {/* Grid renders ONLY up to visibleCount */}
+              <div 
+                className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8"
+                style={{ contentVisibility: 'auto' }}
+              >
+                {currentDisplayList.slice(0, visibleCount).map((item, index) => (
+                  <Link 
+                    key={item.id} 
+                    to={`/movie/${item.id}`} 
+                    className="block w-full group"
+                  >
+                    <MovieCard movie={item} index={index} />
+                  </Link>
+                ))}
+              </div>
+
+              {/* 🚀 LOAD MORE BUTTON */}
+              {visibleCount < currentDisplayList.length && (
+                <div className="flex justify-center mt-12 mb-8">
+                  <button 
+                    onClick={() => setVisibleCount(prev => prev + 20)}
+                    className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-8 py-3 rounded-full border border-slate-700 hover:border-red-600 transition-all duration-300 uppercase tracking-widest text-sm shadow-xl hover:shadow-red-900/20"
+                  >
+                    <Plus size={18} className="text-red-500" />
+                    Load More Movies
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="flex flex-col items-center justify-center py-32 text-slate-500 opacity-50">
                 <div className="text-6xl mb-4">😕</div>
@@ -155,7 +155,4 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
   );
 };
 
-// SPEED OPTIMIZATION 4: React.memo
-// Prevents the entire Home component from re-rendering if parent state changes
-// but the contentData/searchTerm haven't changed.
 export default React.memo(Home);

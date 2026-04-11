@@ -1,5 +1,18 @@
 import { Play, Layers, Library } from 'lucide-react';
 
+// 🚀 SPEED OPTIMIZATION 1: CLOUDINARY INTERCEPTOR
+// This automatically forces Cloudinary to serve tiny, next-gen WebP images
+const getOptimizedUrl = (url) => {
+  if (!url) return '/placeholder.jpg'; // Fallback
+  
+  // If it's a Cloudinary link and doesn't already have optimization tags...
+  if (url.includes('cloudinary.com') && !url.includes('q_auto')) {
+    // Inject q_auto,f_auto right after /upload/
+    return url.replace('/upload/', '/upload/q_auto,f_auto/');
+  }
+  return url;
+};
+
 const MovieCard = ({ movie, onClick, index }) => {
   
   // --- HELPER LOGIC ---
@@ -12,8 +25,9 @@ const MovieCard = ({ movie, onClick, index }) => {
       ? (movie.seasons?.[0]?.episodes?.length || 0) 
       : 0;
 
-  // SPEED LOGIC: First 2 images load with high priority
+  // SPEED LOGIC: First 2 images load with high priority (Fixes LCP)
   const isPriority = index < 2;
+  const optimizedImage = getOptimizedUrl(movie.poster_url || movie.image || movie.thumbnail_url);
 
   return (
     <div 
@@ -24,7 +38,7 @@ const MovieCard = ({ movie, onClick, index }) => {
       {/* 1. Poster Image Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-gray-900 rounded-t-lg">
         <img 
-          src={movie.poster_url || movie.image || movie.thumbnail_url} 
+          src={optimizedImage} 
           alt={movie.title} 
           loading={isPriority ? "eager" : "lazy"} 
           fetchPriority={isPriority ? "high" : "low"} 
@@ -54,7 +68,6 @@ const MovieCard = ({ movie, onClick, index }) => {
 
       {/* 2. Yellow Bottom Bar (Layout Fix) */}
       <div className="bg-[#fbbf24] w-full py-3 px-2 flex flex-col items-center justify-center text-center h-[4.5rem] relative z-20 rounded-b-lg">
-        
         <h3 className="text-black font-bold text-[11px] uppercase line-clamp-2 leading-tight">
           {movie.title}
         </h3>
