@@ -53,6 +53,11 @@ const AppContent = ({
   return (
     <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden">
       
+      {/* 🚀 FIXED: Moved SupportUs back to the very top so the banner sits above the Navbar */}
+      <Suspense fallback={null}>
+        <SupportUs />
+      </Suspense>
+
       <Toaster position="bottom-right" reverseOrder={false} />
       
       <Navbar 
@@ -81,10 +86,8 @@ const AppContent = ({
         </Suspense>
       </div>
 
-      {/* 🚀 NON-BLOCKING UI COMPONENTS */}
-      {/* These will load silently in the background without blocking the main render */}
+      {/* 🚀 OTHER NON-BLOCKING UI COMPONENTS */}
       <Suspense fallback={null}>
-        <SupportUs />
         <FloatingDonation />
         
         {selectedContent && (
