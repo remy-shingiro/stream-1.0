@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo, Suspense, lazy } from 'react'; 
+import { useState, useEffect, useMemo, Suspense, lazy, useCallback } from 'react'; 
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import ReactGA from "react-ga4"; 
 
-// 1. CRITICAL STATIC IMPORTS (Only things the user MUST see on second #1)
+// 1. CRITICAL STATIC IMPORTS
 import { fetchAllData } from './services/githubService'; 
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -19,10 +19,7 @@ const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const Login = lazy(() => import('./components/Login'));
 
 // 🚀 3. DYNAMIC IMPORTS (Popups & Heavy Modals)
-// By lazy-loading these, we save massive amounts of unused JavaScript on initial load!
 const WatchModal = lazy(() => import('./components/WatchModal')); 
-const FloatingDonation = lazy(() => import('./components/FloatingDonation'));
-const SupportUs = lazy(() => import('./components/SupportUs')); 
 
 // --- TRACKER COMPONENT ---
 const AnalyticsTracker = () => {
@@ -43,20 +40,24 @@ const AppContent = ({
   setSelectedContent 
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleNavigation = (movie) => {
+  // 🚀 BUG 1 FIX: The "Zombie Modal" Killer
+  // Automatically close the modal if the user hits the browser's "Back" button
+  useEffect(() => {
+    setSelectedContent(null);
+  }, [location.pathname, setSelectedContent]);
+
+  // 🚀 BUG 2 FIX: Stop the Re-render Avalanche
+  // useCallback prevents the Navbar from re-rendering on every single keystroke
+  const handleNavigation = useCallback((movie) => {
     setSelectedContent(null);
     setSearchTerm(""); 
     navigate(`/movie/${movie.id}`);
-  };
+  }, [navigate, setSelectedContent, setSearchTerm]);
 
   return (
     <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden">
-      
-      {/* 🚀 FIXED: Moved SupportUs back to the very top so the banner sits above the Navbar */}
-      <Suspense fallback={null}>
-        <SupportUs />
-      </Suspense>
 
       <Toaster position="bottom-right" reverseOrder={false} />
       
@@ -86,10 +87,8 @@ const AppContent = ({
         </Suspense>
       </div>
 
-      {/* 🚀 OTHER NON-BLOCKING UI COMPONENTS */}
+      {/* NON-BLOCKING UI COMPONENTS */}
       <Suspense fallback={null}>
-        <FloatingDonation />
-        
         {selectedContent && (
            <WatchModal 
              content={selectedContent}
