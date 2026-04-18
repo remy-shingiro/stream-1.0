@@ -9,16 +9,20 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import SkeletonLoader from './components/SkeletonLoader';
 import ProtectedRoute from './components/ProtectedRoute';
+// 🚀 NEW: Import the Mobile Bottom Navigation
+import MobileBottomNav from './components/MobileBottomNav'; 
 
 // 2. DYNAMIC IMPORTS (Pages)
 const Home = lazy(() => import('./pages/Home'));
 const Seasons = lazy(() => import('./pages/Seasons')); 
+// 🚀 NEW: Dynamic import for your new Movies page
+const Movies = lazy(() => import('./pages/Movies')); 
 const WatchPage = lazy(() => import('./pages/WatchPage'));
 const MovieDetails = lazy(() => import('./pages/MovieDetails')); 
 const AdminPanel = lazy(() => import('./components/AdminPanel')); 
 const Login = lazy(() => import('./components/Login'));
 
-// 🚀 3. DYNAMIC IMPORTS (Popups & Heavy Modals)
+// 3. DYNAMIC IMPORTS (Popups & Heavy Modals)
 const WatchModal = lazy(() => import('./components/WatchModal')); 
 
 // --- TRACKER COMPONENT ---
@@ -42,14 +46,12 @@ const AppContent = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🚀 BUG 1 FIX: The "Zombie Modal" Killer
-  // Automatically close the modal if the user hits the browser's "Back" button
+  // BUG 1 FIX: The "Zombie Modal" Killer
   useEffect(() => {
     setSelectedContent(null);
   }, [location.pathname, setSelectedContent]);
 
-  // 🚀 BUG 2 FIX: Stop the Re-render Avalanche
-  // useCallback prevents the Navbar from re-rendering on every single keystroke
+  // BUG 2 FIX: Stop the Re-render Avalanche
   const handleNavigation = useCallback((movie) => {
     setSelectedContent(null);
     setSearchTerm(""); 
@@ -57,7 +59,8 @@ const AppContent = ({
   }, [navigate, setSelectedContent, setSearchTerm]);
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden">
+    // 🚀 FIXED: Added pb-16 (padding-bottom) on mobile so the nav doesn't cover content
+    <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden pb-16 md:pb-0">
 
       <Toaster position="bottom-right" reverseOrder={false} />
       
@@ -71,7 +74,12 @@ const AppContent = ({
         <Suspense fallback={<SkeletonLoader />}>
           <Routes>
             <Route path="/" element={<Home contentData={allContent} searchTerm={searchTerm} onMovieClick={handleNavigation} />} />
+            
             <Route path="/seasons" element={<Seasons contentData={allContent} searchTerm={searchTerm} />} />
+            
+            {/* 🚀 NEW: Dedicated Movies Route */}
+            <Route path="/movies" element={<Movies contentData={allContent} searchTerm={searchTerm} />} />
+            
             <Route path="/movie/:id" element={<MovieDetails allContent={allContent} />} />
             <Route path="/watch/:id" element={<WatchPage allMovies={allContent} />} />
             <Route path="/login" element={<Login />} />
@@ -100,6 +108,9 @@ const AppContent = ({
         )}
       </Suspense>
 
+      {/* 🚀 NEW: Mobile Bottom Navigation added right above Footer */}
+      <MobileBottomNav />
+      
       <Footer />
     </div>
   );
