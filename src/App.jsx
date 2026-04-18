@@ -60,7 +60,7 @@ const AppContent = ({
 
   return (
     // 🚀 FIXED: Added pb-16 (padding-bottom) on mobile so the nav doesn't cover content
-    <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden pb-16 md:pb-0">
+    <div className="min-h-screen bg-slate-950 font-sans relative overflow-x-hidden pb-24 md:pb-0">
 
       <Toaster position="bottom-right" reverseOrder={false} />
       
