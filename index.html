@@ -46,41 +46,5 @@
     </script>
     
     <script type="module" src="/src/main.jsx"></script>
-
-    <script>
-      (function() {
-        // ——— CONFIGURATION ———
-        var YOUR_AD_URL = 'https://otieu.com/4/10484905'; 
-        var repeatDelay = 60000; 
-        var armed = false;
-
-        function onSmartClick(e) {
-          if (!armed) return;
-          var now = Date.now();
-          var last = parseInt(sessionStorage.getItem('lastAdEvent'), 10) || 0;
-          if (now - last < repeatDelay) return;
-
-          var el = e.target;
-          while (el && el.nodeName !== 'A') el = el.parentElement;
-          if (!el || !el.href) return;
-
-          if (
-            el.classList.contains('download-btn') || 
-            el.getAttribute('download') !== null ||
-            el.href.includes('/download/') ||
-            el.href === '#' 
-          ) return;
-
-          // Action currently commented out for dev
-        }
-
-        window.addEventListener('load', function() {
-          setTimeout(function() {
-            armed = true;
-            document.addEventListener('click', onSmartClick);
-          }, 2000);
-        });
-      })();
-    </script>
   </body>
 </html>
