@@ -46,6 +46,7 @@ const Footer = () => {
               <li><Link to="/seasons" className="hover:text-amber-400 transition-colors">Action</Link></li>
               <li><Link to="/seasons" className="hover:text-amber-400 transition-colors">Seasons</Link></li>
               <li><Link to="/movies" className="hover:text-amber-400 transition-colors">Filime zose</Link></li>
+              <li><Link to="/about" className='"hover:text-amber-400 transition-colors'>About Us (Kuri Twe)</Link></li>
             </ul>
           </div>
 

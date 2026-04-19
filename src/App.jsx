@@ -21,6 +21,7 @@ const WatchPage = lazy(() => import('./pages/WatchPage'));
 const MovieDetails = lazy(() => import('./pages/MovieDetails')); 
 const AdminPanel = lazy(() => import('./components/AdminPanel')); 
 const Login = lazy(() => import('./components/Login'));
+const About = lazy(()=> import('./pages/About'));
 
 // 3. DYNAMIC IMPORTS (Popups & Heavy Modals)
 const WatchModal = lazy(() => import('./components/WatchModal')); 
@@ -79,7 +80,7 @@ const AppContent = ({
             
             {/* 🚀 NEW: Dedicated Movies Route */}
             <Route path="/movies" element={<Movies contentData={allContent} searchTerm={searchTerm} />} />
-            
+            <Route path='/about' element={<About/>}/>
             <Route path="/movie/:id" element={<MovieDetails allContent={allContent} />} />
             <Route path="/watch/:id" element={<WatchPage allMovies={allContent} />} />
             <Route path="/login" element={<Login />} />
