@@ -89,8 +89,8 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
       ref={searchRef}
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled 
-          ? 'bg-slate-900/85 backdrop-blur-2xl border-b border-white/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] py-0' 
-          : 'bg-gradient-to-b from-slate-950/90 to-transparent border-b border-transparent py-2'
+          ? 'bg-slate-900/85 backdrop-blur-2xl border-b-0 border-white/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] py-0' 
+          : 'bg-gradient-to-b-0 from-slate-950/90 to-transparent border-b-0 border-transparent py-2'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
