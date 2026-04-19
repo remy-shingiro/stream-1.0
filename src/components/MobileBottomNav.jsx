@@ -85,7 +85,10 @@ const MobileBottomNav = () => {
             <Link
               key={item.id}
               to={item.path}
-              onClick={() => setActiveIndex(item.id)}
+              onClick={() => {
+                setActiveIndex(item.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="relative flex-1 h-full flex items-center justify-center"
             >
               {content}
