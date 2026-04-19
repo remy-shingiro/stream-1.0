@@ -1,13 +1,14 @@
 import React, { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom'; 
+import { Link, useNavigate } from 'react-router-dom'; // 🚀 IMPORTED useNavigate
 import { Layers, ChevronRight, MonitorPlay, Plus } from 'lucide-react'; 
 import Hero from '../components/Hero';
 import MovieCard from '../components/MovieCard';
 import useStructuredData from '../hooks/useStructuredData';
 
 const Home = ({ contentData, onMovieClick, searchTerm }) => {
-  // 🚀 SPEED OPTIMIZATION 3: Control how many DOM nodes render at once!
+  // 🚀 SPEED OPTIMIZATION: Control how many DOM nodes render at once!
   const [visibleCount, setVisibleCount] = useState(20);
+  const navigate = useNavigate(); // 🚀 INITIALIZED React Router navigation
 
   // SEO: Remains intact for rich search results
   useStructuredData({
@@ -19,7 +20,7 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
   
   if (!contentData) return null;
 
-  // SPEED OPTIMIZATION 1: useMemo for Filtering
+  // SPEED OPTIMIZATION: useMemo for Filtering
   const { filteredContent, seriesData, moviesData } = useMemo(() => {
     const searchLower = searchTerm?.toLowerCase() || '';
     const filtered = contentData.filter((item) =>
@@ -43,8 +44,10 @@ const Home = ({ contentData, onMovieClick, searchTerm }) => {
       {!searchTerm && (
         <div className="pt-0 mt-0 relative z-0"> 
           <Hero 
-            movies={contentData.slice(0, 5)} // 🚀 Pass only top 5 to Hero so it doesn't process 300 items!
-            onPlay={(movie) => window.location.href = `/movie/${movie.id}`} 
+            // 🚀 BUMPED to 10 so it loops through more movies at the top
+            movies={contentData.slice(0, 10)} 
+            // 🚀 FIXED: Instant SPA routing. No more full page reloads!
+            onPlay={(movie) => navigate(`/movie/${movie.id}`)} 
           />
         </div>
       )}

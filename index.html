@@ -23,6 +23,7 @@
     <meta property="twitter:title" content="Agasobanuye Filime - Reba Movies kubuntu">
     <meta property="twitter:description" content="Reba Agasobanuye, Action, and Series in Kinyarwanda. Free streaming.">
     <meta property="twitter:image" content="https://agasobanuyefilime.com/cover-image.jpg.png">
+    
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -32,15 +33,23 @@
     <div id="root"></div>
     
     <script>
+      // 1. Kill all Service Workers instantly
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((reg) => {
-              console.log('App ready to install:', reg.scope);
-              // 🚀 FORCE SERVICE WORKER UPDATE: Kills the old PWA cache!
-              reg.update(); 
-            })
-            .catch((err) => console.log('SW Fail:', err));
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('💀 Old ServiceWorker assassinated.');
+          }
+        });
+      }
+
+      // 2. Wipe the Cache Storage API clean
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            caches.delete(name);
+            console.log('🧹 Cache wiped: ', name);
+          }
         });
       }
     </script>

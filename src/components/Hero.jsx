@@ -4,20 +4,22 @@ import { Play } from 'lucide-react';
 const Hero = ({ movies = [], onPlay }) => {
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-
+  const movieIds = movies.map(m => m.id).join(',');
   // 🚀 SENIOR FIX 1: Bulletproof Shuffle State
   // This guarantees we only shuffle ONCE. It prevents React from 
   // silently re-shuffling and breaking the loop if parent states change.
   useEffect(() => {
-    if (movies && movies.length > 0 && deck.length === 0) {
+    if (movies && movies.length > 0) {
       const shuffled = [...movies];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
       setDeck(shuffled);
+      setCurrentIndex(0); // Reset the loop to the beginning when fresh data arrives
     }
-  }, [movies, deck.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [movieIds]);
 
   // 🚀 THE BULLETPROOF TIMER
   useEffect(() => {
