@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Play, Calendar, Star, ArrowLeft, Clock, Info, ShieldCheck, Zap } from 'lucide-react';
+import { Play, Calendar, Star, ArrowLeft, Clock, Info, ShieldCheck, Zap, Mic2, Mic } from 'lucide-react';
 
 const MovieDetails = ({ allContent }) => {
   const { id } = useParams();
@@ -81,7 +81,7 @@ const MovieDetails = ({ allContent }) => {
             
             {movie.interpreter_name && (
               <div className="inline-flex items-center gap-1.5 bg-amber-400 text-black font-black px-2 py-1 lg:px-3 lg:py-1.5 rounded-md mb-3 lg:mb-4 text-[9px] lg:text-[10px] uppercase shadow-lg shadow-yellow-500/20 w-fit">
-                <Zap size={10} fill="black" />
+                <Mic2 size={15} fill="black" />
                 Yasobanuwe na: {movie.interpreter_name}
               </div>
             )}
@@ -157,7 +157,7 @@ const MovieDetails = ({ allContent }) => {
                 {/* 🚀 FIXED: Added Interpreter logic to Suggestions Grid */}
                 {m.interpreter_name && (
                   <p className="text-slate-400 text-[8px] uppercase truncate flex items-center gap-1 mt-1 tracking-wider font-bold">
-                    <Zap size={8} className="text-amber-400" fill="currentColor" /> {m.interpreter_name}
+                    <Mic2 size={15} className="text-amber-400" fill="currentColor" /> {m.interpreter_name}
                   </p>
                 )}
               </Link>
