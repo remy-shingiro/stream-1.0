@@ -4,10 +4,10 @@ import { Play } from 'lucide-react';
 const Hero = ({ movies = [], onPlay }) => {
   const [deck, setDeck] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // 🚀 THE INDESTRUCTIBLE SHUFFLE
   const movieIds = movies.map(m => m.id).join(',');
-  // 🚀 SENIOR FIX 1: Bulletproof Shuffle State
-  // This guarantees we only shuffle ONCE. It prevents React from 
-  // silently re-shuffling and breaking the loop if parent states change.
+  
   useEffect(() => {
     if (movies && movies.length > 0) {
       const shuffled = [...movies];
@@ -78,6 +78,7 @@ const Hero = ({ movies = [], onPlay }) => {
             <img 
               src={getOptimizedUrl(currentMovie.poster_url || currentMovie.image, true)}
               alt={currentMovie.title}
+              fetchPriority="high" /* 🚀 LCP SCORE FIX: Prioritize this image download */
               onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder.jpg'; }}
               className="h-full w-full object-cover transition-transform duration-[10000ms] ease-linear scale-100 group-hover:scale-105" 
             />
@@ -90,7 +91,6 @@ const Hero = ({ movies = [], onPlay }) => {
              </span>
           </div>
 
-          {/* 🚀 SENIOR FIX 2: Strict left-alignment and massive size reduction */}
           <div className="relative h-full flex flex-col justify-end items-start px-5 pb-8 z-10 text-white text-left">
              
              <h1 className="text-lg font-black mb-1 uppercase leading-tight tracking-wide text-white drop-shadow-lg line-clamp-2">
@@ -138,6 +138,7 @@ const Hero = ({ movies = [], onPlay }) => {
                   <img 
                     src={getOptimizedUrl(movie.poster_url || movie.image, false)}
                     alt={movie.title}
+                    fetchPriority="high" /* 🚀 LCP SCORE FIX: Prioritize this image download */
                     onError={(e) => { e.target.onerror = null; e.target.src = '/placeholder.jpg'; }}
                     className="h-full w-full object-cover transition-all duration-700 ease-out" 
                   />
@@ -150,7 +151,6 @@ const Hero = ({ movies = [], onPlay }) => {
                   </span>
                 </div>
 
-                {/* 🚀 SENIOR FIX 2: Desktop Layout strict left-alignment and text scale down */}
                 <div className="relative h-full flex flex-col justify-end items-start p-6 z-20 text-left">
                   
                   <h2 className="text-xl font-black mb-1 uppercase leading-tight tracking-wide text-white drop-shadow-lg line-clamp-2">
