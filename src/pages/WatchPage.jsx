@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { 
-  ArrowLeft, Share2, Play, Download, Mic2, Loader2, Lock 
+  ArrowLeft, Share2, Play, Download, Mic2, Loader2, Lock, CheckCircle2 
 } from 'lucide-react';
 import CommentSection from '../components/CommentSection';
 
 // 🚀 FIREBASE & SECURE MODALS IMPORTS
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth'; // NEW IMPORT for silent checking
 import AuthModal from '../components/AuthModal';
 import PaywallModal from '../components/PaywallModal';
-// import PaywallModal from './PaywallModal'; // We will build this in the next step
 
 const WatchPage = ({ allMovies }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // --- SECURITY STATES ---
+  // --- VIP SECURITY STATES ---
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPaywallModal, setShowPaywallModal] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isCheckingAccess, setIsCheckingAccess] = useState(false);
+  
+  // null = 'checking', true = 'premium access', false = 'locked'
+  const [hasAccess, setHasAccess] = useState(null); 
+  const [isCheckingClick, setIsCheckingClick] = useState(false);
 
   // 1. Find the current series or movie
   const movie = useMemo(() => 
@@ -38,76 +40,74 @@ const WatchPage = ({ allMovies }) => {
   const currentEpisode = isSeriesOrCollection ? episodes[currentEpIndex] : movie;
   const activeVideoUrl = isSeriesOrCollection ? currentEpisode?.link : (movie?.video_url || movie?.url);
 
+  // 🚀 SILENT VIP CHECK ON PAGE LOAD
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Reset play state if they switch episodes
-    setIsPlaying(false);
+    setHasAccess(null); // Reset to checking state when movie changes
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setHasAccess(false); // Not logged in -> Locked
+        return;
+      }
+
+      // God Mode Bypass
+      if (user.email === 'shingiroremy303@gmail.com') {
+        setHasAccess(true);
+        return;
+      }
+
+      // Silent Token Check
+      try {
+        const tokensRef = collection(db, 'tokens');
+        const q = query(tokensRef, 
+          where('used_by', '==', user.uid), 
+          where('status', '==', 'active')
+        );
+        
+        const querySnapshot = await getDocs(q);
+        let valid = false;
+        const now = new Date();
+
+        querySnapshot.forEach((doc) => {
+          if (now < new Date(doc.data().expires_at)) {
+            valid = true;
+          }
+        });
+
+        setHasAccess(valid);
+      } catch (error) {
+        console.error("Silent Check Error:", error);
+        setHasAccess(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, [id, currentEpIndex]);
 
 
-  // 🚀 THE BULLETPROOF LOGIC GATE 
-  // We pass 'actionType' so it knows whether to play the video or trigger a download
-  const handleSecureAction = async (actionType, targetUrl) => {
+  // 🚀 BUTTON ACTION GATE (For users who click when locked, or for Downloads)
+  const handleActionClick = (actionType, targetUrl) => {
     if (!targetUrl) return;
-    
-    setIsCheckingAccess(true);
-    const currentUser = auth.currentUser;
 
-    // GATE 1: Are they logged in?
-    if (!currentUser) {
-      setShowAuthModal(true);
-      setIsCheckingAccess(false);
-      return; // 🛑 STOP
-    }
-
-    // GATE 2: Are you the Admin? (God Mode)
-    if (currentUser.email === 'YOUR_EMAIL_HERE@gmail.com') { // Replace with your email!
-      executeAction(actionType, targetUrl);
-      setIsCheckingAccess(false);
-      return; // 🟢 PROCEED INSTANTLY
-    }
-
-    // GATE 3: Check Firebase for an active token attached to their User ID
-    try {
-      const tokensRef = collection(db, 'tokens');
-      const q = query(tokensRef, 
-        where('used_by', '==', currentUser.uid), 
-        where('status', '==', 'active')
-      );
-      
-      const querySnapshot = await getDocs(q);
-      let hasValidAccess = false;
-      const now = new Date();
-
-      querySnapshot.forEach((doc) => {
-        const tokenData = doc.data();
-        const expirationDate = new Date(tokenData.expires_at);
-        if (now < expirationDate) {
-          hasValidAccess = true;
-        }
-      });
-
-      if (hasValidAccess) {
-        executeAction(actionType, targetUrl); // 🟢 TOKEN VALID: PROCEED
-      } else {
-        setShowPaywallModal(true); // 🛑 NO TOKEN: SHOW PAYWALL
+    // If they already have access, just do the action immediately! No freezing.
+    if (hasAccess) {
+      if (actionType === 'download') {
+        window.open(targetUrl, '_blank');
+      } else if (actionType === 'watch') {
+        window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll back up to the video
       }
-      
-    } catch (error) {
-      console.error("Access Check Error:", error);
-      alert("Habaye ikibazo mu kugenzura konti yawe. Ongera ugerageze."); // Kinyarwanda error
-    } finally {
-      setIsCheckingAccess(false);
+      return;
     }
-  };
 
-  // Helper to actually run the action if the Logic Gate passes
-  const executeAction = (actionType, targetUrl) => {
-    if (actionType === 'watch') {
-      setIsPlaying(true);
-    } else if (actionType === 'download') {
-      window.open(targetUrl, '_blank');
+    // If they DON'T have access, figure out which wall they hit
+    setIsCheckingClick(true);
+    if (!auth.currentUser) {
+      setShowAuthModal(true);
+    } else {
+      setShowPaywallModal(true);
     }
+    setIsCheckingClick(false);
   };
 
   const handleEpisodeSwitch = (index) => {
@@ -124,9 +124,7 @@ const WatchPage = ({ allMovies }) => {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        console.log('Share canceled or failed', err);
-      }
+      } catch (err) {}
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -177,9 +175,18 @@ const WatchPage = ({ allMovies }) => {
         {/* PLAYER SECTION (LEFT COLUMN) */}
         <div className="flex-1">
           
-          {/* 🚀 FIXED: The locked Player Area */}
           <div className="relative w-full aspect-video bg-black shadow-2xl lg:rounded-3xl overflow-hidden border border-white/10 group flex items-center justify-center">
-            {isPlaying ? (
+            
+            {/* STATE 1: LOADING (Checking Firebase silently) */}
+            {hasAccess === null && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-20 bg-slate-950/80 backdrop-blur-sm">
+                <Loader2 size={40} className="animate-spin text-amber-400 mb-4" />
+                <p className="text-amber-400 text-xs font-black tracking-[0.2em] uppercase animate-pulse">Checking Access...</p>
+              </div>
+            )}
+
+            {/* STATE 2: UNLOCKED (Premium VIP Access) */}
+            {hasAccess === true && (
               <iframe
                 key={activeVideoUrl} 
                 src={activeVideoUrl}
@@ -189,8 +196,10 @@ const WatchPage = ({ allMovies }) => {
                 frameBorder="0"
                 allow="autoplay; fullscreen"
               ></iframe>
-            ) : (
-              // If not playing, show the locked state
+            )}
+
+            {/* STATE 3: LOCKED (Free User) */}
+            {hasAccess === false && (
               <>
                 <img 
                   src={movie.poster_url || movie.image} 
@@ -200,20 +209,14 @@ const WatchPage = ({ allMovies }) => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                 
                 <button 
-                  onClick={() => handleSecureAction('watch', activeVideoUrl)}
-                  disabled={isCheckingAccess}
+                  onClick={() => handleActionClick('watch', activeVideoUrl)}
+                  disabled={isCheckingClick}
                   className="relative z-10 flex flex-col items-center gap-3 bg-amber-400/90 hover:bg-amber-400 text-black px-10 py-6 rounded-3xl backdrop-blur-sm transition-transform hover:scale-105 disabled:opacity-70 disabled:hover:scale-100"
                 >
-                  {isCheckingAccess ? (
-                     <Loader2 size={32} className="animate-spin" />
-                  ) : (
-                     <>
-                       <div className="bg-black/10 p-3 rounded-full mb-1">
-                         <Lock fill="black" size={32} />
-                       </div>
-                       <span className="font-black text-sm uppercase tracking-[0.2em]">Fungura Video</span>
-                     </>
-                  )}
+                  <div className="bg-black/10 p-3 rounded-full mb-1">
+                    <Lock fill="black" size={32} />
+                  </div>
+                  <span className="font-black text-sm uppercase tracking-[0.2em]">Fungura Video</span>
                 </button>
               </>
             )}
@@ -229,20 +232,28 @@ const WatchPage = ({ allMovies }) => {
                 </h2>
               </div>
 
-              {/* 🚀 FIXED: These buttons now also go through the Security Logic Gate */}
               <div className="flex items-center gap-3 w-full md:w-auto">
+                {/* 🚀 FIXED: Dynamic Watch Button based on VIP status */}
                 <button 
-                  onClick={() => handleSecureAction('watch', activeVideoUrl)}
-                  disabled={isCheckingAccess || isPlaying} // Disabled if already playing
-                  className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-amber-400 text-black px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(251,191,36,0.3)] disabled:opacity-50 disabled:hover:scale-100"
+                  onClick={() => handleActionClick('watch', activeVideoUrl)}
+                  disabled={isCheckingClick}
+                  className={`flex-1 md:flex-none flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 disabled:opacity-50
+                    ${hasAccess 
+                      ? 'bg-amber-400/10 text-amber-400 border border-amber-400/30 cursor-default hover:bg-amber-400/20' 
+                      : 'bg-amber-400 text-black hover:scale-105 shadow-[0_0_20px_rgba(251,191,36,0.3)]'
+                    }
+                  `}
                 >
-                  {isCheckingAccess ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="black" />} 
-                  {isPlaying ? 'IRAKINA...' : 'REBA VIDEO'}
+                  {hasAccess ? (
+                     <><CheckCircle2 size={18} /> PREMIUM ACTIVE</>
+                  ) : (
+                     <><Play size={18} fill="black" /> REBA VIDEO</>
+                  )}
                 </button>
                 
                 <button 
-                  onClick={() => handleSecureAction('download', currentEpisode?.downloadLink || movie.download_url)}
-                  disabled={isCheckingAccess}
+                  onClick={() => handleActionClick('download', currentEpisode?.downloadLink || movie.download_url)}
+                  disabled={isCheckingClick}
                   className="flex-1 md:flex-none flex items-center justify-center gap-3 bg-green-600 hover:bg-green-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg active:scale-95 border border-green-500/20 disabled:opacity-70"
                 >
                   <Download size={18} /> DOWNLOAD
@@ -251,14 +262,13 @@ const WatchPage = ({ allMovies }) => {
             </div>
           </div>
 
-          {/* COMMENT SECTION */}
           <div className="px-5 lg:px-2 pb-12">
             <CommentSection movieId={movie.id} />
           </div>
 
         </div>
 
-        {/* SIDEBAR (Unchanged from your code) */}
+        {/* SIDEBAR */}
         <div className="w-full lg:w-[420px] p-5 lg:p-0">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1.5 h-6 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)]"></div>
@@ -336,7 +346,6 @@ const WatchPage = ({ allMovies }) => {
         </div>
       </div>
 
-      {/* --- HIDDEN MODALS TRIGGERED BY LOGIC GATE --- */}
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 

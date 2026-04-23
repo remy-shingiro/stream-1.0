@@ -13,7 +13,6 @@ const PaywallModal = ({ isOpen, onClose }) => {
   const handleActivateToken = async (e) => {
     e.preventDefault();
     
-    // Basic format check (e.g., AGA-XXXXX)
     const formattedCode = tokenCode.trim().toUpperCase();
     if (!formattedCode.startsWith('AGA-')) {
       toast.error("Code format should start with 'AGA-'");
@@ -25,44 +24,71 @@ const PaywallModal = ({ isOpen, onClose }) => {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("You must be logged in to activate a code.");
 
-      // 1. Ask Firebase: Does this unused code exist?
+      // 1. Is the code they typed valid and unused?
       const tokensRef = collection(db, 'tokens');
-      const q = query(tokensRef, 
+      const tokenQuery = query(tokensRef, 
         where('token_code', '==', formattedCode),
         where('status', '==', 'unused')
       );
       
-      const querySnapshot = await getDocs(q);
+      const tokenSnapshot = await getDocs(tokenQuery);
 
-      if (querySnapshot.empty) {
+      if (tokenSnapshot.empty) {
         toast.error("Invalid code or already used. Please check again.");
         setLoading(false);
         return;
       }
 
-      // 2. We found a valid code! Let's activate it.
-      const tokenDoc = querySnapshot.docs[0];
+      const tokenDoc = tokenSnapshot.docs[0];
       const tokenData = tokenDoc.data();
       
-      // Calculate expiration date based on the plan you sold them
-      const now = new Date();
-      let expiresAt = new Date();
+      // 🚀 NEW LOGIC: TIME STACKING
+      // Let's see if this user ALREADY has an active, unexpired token.
+      const userTokensQuery = query(tokensRef,
+        where('used_by', '==', currentUser.uid),
+        where('status', '==', 'active')
+      );
       
-      if (tokenData.plan_type === '1_day') expiresAt.setHours(expiresAt.getHours() + 24);
-      else if (tokenData.plan_type === '1_week') expiresAt.setDate(expiresAt.getDate() + 7);
-      else if (tokenData.plan_type === '1_month') expiresAt.setDate(expiresAt.getDate() + 30);
+      const userTokensSnapshot = await getDocs(userTokensQuery);
+      
+      // Assume the start time is right now.
+      let baselineDate = new Date(); 
 
-      // 3. Lock the token to this user in Firebase
+      // If they have existing tokens, find the one that expires the LATEST.
+      if (!userTokensSnapshot.empty) {
+        let latestExpiration = new Date(0); // Very old date to start
+        
+        userTokensSnapshot.forEach((doc) => {
+          const expDate = new Date(doc.data().expires_at);
+          if (expDate > latestExpiration) {
+            latestExpiration = expDate;
+          }
+        });
+
+        // If their latest token is still active in the future, we stack ON TOP of that date!
+        if (latestExpiration > baselineDate) {
+           baselineDate = latestExpiration; 
+           toast.success("Time added to your existing subscription!");
+        }
+      }
+
+      // 3. Calculate the new expiration date starting from the baseline
+      let finalExpiresAt = new Date(baselineDate);
+      
+      if (tokenData.plan_type === '1_day') finalExpiresAt.setHours(finalExpiresAt.getHours() + 24);
+      else if (tokenData.plan_type === '1_week') finalExpiresAt.setDate(finalExpiresAt.getDate() + 7);
+      else if (tokenData.plan_type === '1_month') finalExpiresAt.setDate(finalExpiresAt.getDate() + 30);
+
+      // 4. Lock the token to this user and set the stacked expiration date
       await updateDoc(doc(db, 'tokens', tokenDoc.id), {
         status: 'active',
         used_by: currentUser.uid,
-        activated_at: now.toISOString(),
-        expires_at: expiresAt.toISOString()
+        activated_at: new Date().toISOString(), // Still record exactly when they typed it
+        expires_at: finalExpiresAt.toISOString()
       });
 
       toast.success("Movie Unlocked! Enjoy watching.");
       
-      // Close the modal and force the page to refresh so the Logic Gate runs again
       onClose();
       window.location.reload();
 
@@ -74,6 +100,7 @@ const PaywallModal = ({ isOpen, onClose }) => {
     }
   };
 
+  // ... (The rest of the UI return block remains exactly the same) ...
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-md p-8 bg-slate-900 border border-amber-400/20 rounded-3xl shadow-[0_0_50px_rgba(251,191,36,0.1)]">
