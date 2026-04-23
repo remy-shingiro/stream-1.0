@@ -11,7 +11,7 @@ import SkeletonLoader from './components/SkeletonLoader';
 import ProtectedRoute from './components/ProtectedRoute';
 // 🚀 NEW: Import the Mobile Bottom Navigation
 import MobileBottomNav from './components/MobileBottomNav'; 
-
+import TokenGenerator from './pages/TokenGenerator';
 // 2. DYNAMIC IMPORTS (Pages)
 const Home = lazy(() => import('./pages/Home'));
 const Seasons = lazy(() => import('./pages/Seasons')); 
@@ -89,6 +89,14 @@ const AppContent = ({
               element={
                 <ProtectedRoute>
                   <AdminPanel movies={allContent} />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/token" 
+              element={
+                <ProtectedRoute>
+                  <TokenGenerator />
                 </ProtectedRoute>
               } 
             />
