@@ -9,6 +9,7 @@ import CommentSection from '../components/CommentSection';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import AuthModal from '../components/AuthModal';
+import PaywallModal from '../components/PaywallModal';
 // import PaywallModal from './PaywallModal'; // We will build this in the next step
 
 const WatchPage = ({ allMovies }) => {
@@ -341,10 +342,10 @@ const WatchPage = ({ allMovies }) => {
         onClose={() => setShowAuthModal(false)} 
       />
       
-      {/* <PaywallModal 
+      <PaywallModal 
         isOpen={showPaywallModal} 
         onClose={() => setShowPaywallModal(false)} 
-      /> */}
+      />
       
     </div>
   );
