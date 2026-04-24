@@ -10,7 +10,7 @@ const TokenGenerator = () => {
   const [copied, setCopied] = useState(false);
 
   // 🚀 THE ADMIN LOCK: Only your specific email can access the generator
-  const ADMIN_EMAIL = 'shingiroremy303@gmail.com';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL;
 
   if (auth.currentUser?.email !== ADMIN_EMAIL) {
     return (

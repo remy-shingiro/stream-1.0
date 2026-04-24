@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom'; // 🚀 ADDED: useNavigate
 import { Home, Film, MonitorPlay, Search, User, LogOut } from 'lucide-react';
 
 // 🚀 AUTH IMPORTS
@@ -9,6 +9,7 @@ import AuthModal from './AuthModal';
 
 const MobileBottomNav = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // 🚀 ADDED: Initialize navigate
   const [activeIndex, setActiveIndex] = useState(0);
 
   // 🚀 AUTH STATES
@@ -65,13 +66,32 @@ const MobileBottomNav = () => {
 
   return (
     <>
-      {/* 🚀 LOGOUT POPUP (Floats just above the nav pill) */}
+      {/* 🚀 LOGOUT & ADMIN POPUP (Floats just above the nav pill) */}
       {showMobileMenu && user && (
         <div className="md:hidden fixed bottom-24 right-[5%] z-50 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-2 w-48 animate-in slide-in-from-bottom-4">
           <div className="px-4 py-3 border-b border-white/5 mb-1">
             <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Wamaze kwinjira</p>
             <p className="text-xs text-white truncate font-bold">{user.email}</p>
           </div>
+
+          {/* 🚀 SECRET ADMIN LINKS (Only visible to you on mobile) */}
+          {user.email === import.meta.env.VITE_ADMIN_EMAIL && (
+            <div className="mb-2 pb-2 border-b border-white/5">
+              <button 
+                onClick={() => { setShowMobileMenu(false); navigate('/admin'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all text-xs font-bold"
+              >
+                Admin Dashboard
+              </button>
+              <button 
+                onClick={() => { setShowMobileMenu(false); navigate('/token'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all text-xs font-bold"
+              >
+                Token Generator
+              </button>
+            </div>
+          )}
+
           <button 
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all text-xs font-bold"
