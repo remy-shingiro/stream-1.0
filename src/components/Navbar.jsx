@@ -1,14 +1,37 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X } from 'lucide-react'; 
+import { Search, X, LogOut, User } from 'lucide-react'; 
+import { auth } from '../firebase';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import AuthModal from './AuthModal';
 
 const Navbar = ({ onSearch, data = [], onItemClick }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const [isScrolled, setIsScrolled] = useState(false); // 🚀 NEW: Tracks scroll position
+  const [isScrolled, setIsScrolled] = useState(false);
   const searchRef = useRef(null);
+  
+  // 🚀 AUTH STATES & REFS
+  const [user, setUser] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const menuRef = useRef(null);
 
-  // 🚀 NEW: Scroll Listener for the "Lavish" Sticky Effect
+  // 1. Listen for Auth State
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    setShowUserMenu(false);
+    window.location.reload(); 
+  };
+
+  // Scroll Listener for the "Lavish" Sticky Effect
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
@@ -27,12 +50,15 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
     return () => clearTimeout(timer);
   }, [searchQuery, onSearch]);
 
-  // Close suggestions when clicking outside
+  // Close suggestions OR user menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setSuggestions([]);
         setIsSearchOpen(false); 
+      }
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -82,11 +108,8 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
   };
 
   return (
-    // 🚀 FIXED: Dynamic Scroll Styling.
-    // Changes from a seamless top gradient to a frosted glassmorphic bar on scroll.
-    // Changed absolute/sticky to `fixed top-0 w-full` for reliable stickiness.
-    <nav 
-      ref={searchRef}
+    <>
+      <nav 
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         isScrolled 
           ? 'bg-slate-900/85 backdrop-blur-2xl border-b-0 border-white/5 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)] py-0' 
@@ -94,7 +117,6 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Adjusted height to be slightly slimmer for a more premium feel */}
         <div className="flex items-center justify-between h-16 md:h-20 gap-4 transition-all duration-500">
           
           {/* --- LOGO --- */}
@@ -109,7 +131,6 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
           </a>
 
           {/* --- DESKTOP NAVIGATION --- */}
-          {/* Replaced bulky yellow buttons with sleek, minimalist text links and hover accents */}
           <div className="hidden md:flex items-center space-x-8">
             <a href="/" className="text-xs font-bold uppercase tracking-widest text-gray-300 hover:text-amber-400 transition-colors relative group">
               Ahabanza
@@ -125,11 +146,11 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             </a>
           </div>
 
-          {/* --- RIGHT SIDE: DESKTOP SEARCH --- */}
-          {/* Note: Hidden on mobile because MobileBottomNav handles mobile search triggers */}
-          <div className="hidden md:flex items-center gap-4 relative">
+          {/* --- RIGHT SIDE: DESKTOP SEARCH & AUTH --- */}
+          <div className="hidden md:flex items-center gap-6 relative">
             
-            <div className="relative">
+            {/* Search Bar */}
+            <div className="relative" ref={searchRef}>
               <input 
                 type="text" 
                 value={searchQuery}
@@ -142,7 +163,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                 onClick={handleManualSearch}
                 className="absolute right-1 top-1 h-8 w-8 bg-amber-400 text-black rounded-full hover:bg-white flex items-center justify-center cursor-pointer transition-colors shadow-md"
               >
-                  <Search size={14} strokeWidth={3} />
+                <Search size={14} strokeWidth={3} />
               </button>
 
               {/* Desktop Suggestions */}
@@ -164,6 +185,53 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                 </div>
               )}
             </div>
+
+{/* 🚀 NEW: AUTH BUTTON / USER MENU */}
+            <div className="relative" ref={menuRef}>
+              {user ? (
+                <>
+                  <button 
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-2 py-2 pr-4 rounded-full border border-white/10 transition-all cursor-pointer active:scale-95"
+                  >
+                    <div className="w-7 h-7 bg-amber-400 rounded-full flex items-center justify-center text-black font-black text-xs shadow-inner">
+                      {user.email.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest hidden lg:block">Konti</span>
+                  </button>
+
+                  {/* Dropdown Menu */}
+                  {showUserMenu && (
+                    <div className="absolute right-0 mt-3 w-56 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-2 animate-in fade-in zoom-in-95 duration-200 z-50">
+                      <div className="px-4 py-4 border-b border-white/5 mb-2 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-amber-400">
+                          <User size={20} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-[9px] text-slate-500 uppercase font-black tracking-widest mb-0.5">Wamaze Kwinjira</p>
+                          <p className="text-xs text-white truncate font-bold">{user.email}</p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all text-xs font-bold"
+                      >
+                        <LogOut size={16} /> Sohoka (Log Out)
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-black px-5 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                >
+                  <User size={14} strokeWidth={3} />
+                  Injira
+                </button>
+              )}
+            </div>
+
           </div>
         </div>
       </div>
@@ -186,11 +254,10 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                 onClick={handleManualSearch}
                 className="absolute right-1.5 top-1.5 h-9 w-9 bg-amber-400 text-black rounded-full flex items-center justify-center hover:bg-white cursor-pointer transition-colors shadow-md"
               >
-                  <Search size={16} strokeWidth={3} />
+                <Search size={16} strokeWidth={3} />
               </button>
             </div>
             
-            {/* Close Search Button */}
             <button 
               onClick={() => { setIsSearchOpen(false); setSuggestions([]); }} 
               className="p-2 text-gray-400 hover:text-white transition-colors"
@@ -199,7 +266,6 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
             </button>
           </div>
 
-          {/* Mobile Search Suggestions */}
           {suggestions.length > 0 && (
             <div className="mt-4 w-full bg-slate-800 border border-white/5 rounded-xl shadow-2xl overflow-hidden max-h-[60vh] overflow-y-auto">
               {suggestions.map((movie) => (
@@ -219,7 +285,12 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
           )}
         </div>
       )}
+
+
     </nav>
+          {/* Global Auth Modal */}
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+    </>
   );
 };
 
