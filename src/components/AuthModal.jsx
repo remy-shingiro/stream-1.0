@@ -82,6 +82,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             <input 
               type="email" 
               required
+              autoComplete='email'
               placeholder="Email yawe"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -94,6 +95,7 @@ const AuthModal = ({ isOpen, onClose }) => {
             <input 
               type="password" 
               required
+              autoComplete={isLogin ? "current-password" : "new-password"}
               placeholder="Ijambo ry'ibanga (Password)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
