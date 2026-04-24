@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { Search, X, LogOut, User } from 'lucide-react'; 
+import { useNavigate } from 'react-router-dom'; // 🚀 ADDED: Router hook for fast navigation
 import { auth } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import AuthModal from './AuthModal';
 
 const Navbar = ({ onSearch, data = [], onItemClick }) => {
+  const navigate = useNavigate(); // 🚀 ADDED: Initialize navigate
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -186,7 +188,7 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
               )}
             </div>
 
-{/* 🚀 NEW: AUTH BUTTON / USER MENU */}
+            {/* 🚀 AUTH BUTTON / USER MENU */}
             <div className="relative" ref={menuRef}>
               {user ? (
                 <>
@@ -212,6 +214,25 @@ const Navbar = ({ onSearch, data = [], onItemClick }) => {
                           <p className="text-xs text-white truncate font-bold">{user.email}</p>
                         </div>
                       </div>
+
+                      {/* 🚀 SECRET ADMIN LINKS (Only visible to you) */}
+                      {user.email === 'shingiroremy303@gmail.com' && (
+                        <div className="mb-2 pb-2 border-b border-white/5">
+                          <button 
+                            onClick={() => { setShowUserMenu(false); navigate('/admin'); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all text-xs font-bold"
+                          >
+                            Admin Dashboard
+                          </button>
+                          <button 
+                            onClick={() => { setShowUserMenu(false); navigate('/token'); }}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-amber-400 hover:bg-amber-400/10 rounded-xl transition-all text-xs font-bold"
+                          >
+                            Token Generator
+                          </button>
+                        </div>
+                      )}
+
                       <button 
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl transition-all text-xs font-bold"
